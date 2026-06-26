@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<!--#include virtual="../head.shtml" -->
+<body>
+  <!--#include virtual="../navbar.html" -->
+  <script>var p = document.getElementById("menu.tutorials"); p.className = "nav-item active";</script>
+  <main role="main" class="container">
+    <h1 class="mt-5">Tutorial 11: Select</h1>
+    <!--#set var="DEADLINE" value="10 p.m. on Friday, March 27, 2020" -->
+    <!--#include virtual="./deadline.shtml" -->
+    <h2>Introduction</h2>
+
+<p>
+  The purpose of this exercise is to practice using <code>select</code>
+  to read from multiple file descriptors. You'll be using this system
+  call in Assignment 4.
+</p>
+
+<p>
+  This tutorial will serve as the second milestone for Assignment 4.
+  Just like with last week's tutorial, you should be able to be directly
+  re-use your code for completing Assignment 4.
+</p>
+
+<p>
+  Pull the <code>t11</code> starter code from your repository.
+  Like last week, you should change the port in the <tt>Makefile</tt>
+  before doing anything else. Take the last four digits of your student
+  number, and add a 5 in front. For example, if your student number is
+  998123456, your port would be 53456. Using this base port, you may
+  add 1 to it as necessary in order to use new ports (for example, the
+  fictitious student here could also use 53457, 53458, 53459, 53460).
+  Sometimes, when you shutdown your server (e.g., to compile and run
+  it again), the OS will not release the old port immediately, so you
+  may have to cycle through ports a bit.
+</p>
+
+<h2>Text-Based Protocols</h2>
+
+<p>
+  Just like human-to-human communication, which follows well-defined
+  rules for spelling and grammar, machine-to-machine communication
+  must follow well-defined rules and structure. These rules are much
+  more rigid than those for human communication&mdash;even a simple
+  one-character error can throw a system into disarray.
+</p>
+
+<p>
+  Broadly speaking, communication protocols can be either (1) text-based,
+  where all data being communicated is encoded in human-readable text,
+  or (2) they can be binary protocols where the data can include
+  non-human-readable bytes. Note that text-based protocols are
+  technically binary, since everything that is interpreted by a
+  computer must be binary. However, ASCII characters are a specific
+  set of binary sequences that can be mapped to human-readable characters.
+  So we read the ASCII byte <code>0x65</code> as the letter <code>A</code>,
+  for example, whereas the byte <code>0xFF</code> has no visual
+  representation in ASCII.
+</p>
+
+<p>
+  <a href="https://en.wikipedia.org/wiki/Text-based_protocol">Wikipedia has a few more things to say</a>
+  about the advantages and disadvantages of text-based and binary protocols.
+</p>
+
+<p>
+  In this course, we are only working with text-based protocols. That is one
+  of the reasons why we never send <code>NULL</code> characters over a socket,
+  i.e., because it does not have a valid text representation. It is considered
+  to be a "control" character that is not meant to be displayed on-screen to
+  users.
+</p>
+
+<h2>A Chat Protocol</h2>
+
+<p>
+  For this tutorial, we are building a simple chat application starting from the
+  code that you worked with in Tutorial 10. The goal is to allow many
+  clients to connect to a server and send messages to each other. Below is
+  a sample run from a user Bob. The text that <tt><b>looks like this</b></tt>
+  represents characters that Bob has typed.
+</p>
+
+<pre>
+$ <b>./chat_client</b>
+Please enter a username: <b>bob</b>
+<b>hey all, what's up?</b>
+joe: hey bob, just working on this awesome CSC209 tutorial
+<b>oh cool, me too!</b>
+</pre>
+
+<p>
+  Before jumping into the C programming, we must first define a simple protocol
+  to be used by a chat server
+  and client. Every protocol message sent by a client must be in the following
+  format:
+</p>
+
+<pre>
+USER_MESSAGE CRLF
+</pre>
+
+<p>
+  Where <code>USER_MESSAGE</code> is a message consisting of series of 0
+  to <code>MAX_USER_MSG</code> characters that a user types in from the client,
+  and <code>CRLF</code> represents a Carriage Return <code>\r</code> followed
+  by a Line Feed <code>\n</code> character.
+</p>
+
+<p>
+  Every protocol message sent by a server must be in the following format:
+</p>
+
+<pre>
+USER_NAME SPACE USER_MESSAGE CRLF
+</pre>
+
+<p>
+  Where <code>USER_NAME</code> the username of the user that sent a message.
+  The username can be a maximum of <code>MAX_NAME</code> characters, and
+  <strong>must not contain any spaces</strong>. If you think about why, you
+  should start to appreciate how difficult to design a good network protocol
+  and write a reliable implementation. The user name is followed by a single
+  space character, which is then followed by the message and <code>CRLF</code>
+  as described previously.
+</p>
+
+<p>
+  Note from the sample output above that the client does not simply print
+  the protocol messages as-is. It must <strong>parse</strong>
+  the protocol message and display it in a "pretty" format for the user, which
+  in this case involves adding a colon after the user name. A different client
+  might even add some additional information, such as a timestamp of when the
+  message was received (even though there is no timestamp sent in the actual
+  protocol message).
+</p>
+
+<h2>A Note on Software Quality, Reliability, and Security</h2>
+
+<p>
+  Lack of testing is a common source of software quality, reliability, and security problems.
+  For example, a software developer might write a server but only
+  test it against their own clients. Your own client might
+  prevent the user from typing in a username that is longer than
+  <code>MAX_NAME</code> characters. But what if a user connects to your server
+  with a buggy client, written by somebody who didn't take this course? Or
+  what if a rogue hacker writes their own client, designed to find and exploit
+  vulnerabilities in your code? That is why <strong>both</strong> the server
+  and the client must perform their own error-checking. So even if your client
+  does not send any invalid messages, your server should be designed to correctly
+  handle any situation where it encounters an invalid protocol message. In our
+  case, the server disconnects any misbehaving clients that send oversized
+  messages. Likewise, a client should disconnect from a
+  server if it receives any invalid messages (i.e., if it violates the
+  protocol message format specifications).
+</p>
+
+<p>
+  To ensure that both your client and server behave correctly when receiving
+  invalid messages, you should prepare some of your own tests with Python,
+  as described in last week's tutorial.
+</p>
+
+<h2>Implementation</h2>
+<p>
+  Take a look at the <tt>chat_client.c</tt> code. This program creates a
+  connection to a server. Then, it prompts the user for the username,
+  which is read from standard input. The client does some basic error
+  checking (such as checking the length of the user name), but you should
+  add some of your own based on the protocol as described above. You are
+  asked to complete the rest of the client code. You will find four
+  lengthy comment blocks, labelled Step 1 through Step 4, to guide you
+  through completing the rest of the code.
+</p>
+
+<p>
+  When completing the client program, take a look at how the
+  server uses <code>select</code>. In particular,
+  look at the <code>fd_set</code> variables it is managing and how it
+  checks which file descriptor is ready for reading using
+  <code>FD_ISSET</code>. Your task is to update the client so it
+  monitors just two file descriptors: <code>stdin</code> and the socket
+  that is connected to the server. Whenever a message is received on
+  either, your program should read it and process it.
+</p>
+
+<p>
+  What happens in
+  <tt>chat_server.c</tt>? It accepts a connection from a client.
+  Then, it waits for input from the user and then sends the message to
+  all other users. The server code is already written for you.
+</p>
+
+<p>
+  In <tt>socket.h</tt> and <tt>socket.c</tt> you will find some helper
+  functions, macros, and structs that are used by both the server
+  and client. Three of the helper functions are directly from
+  Tutorial 10, so you may copy and paste your functions here as-is.
+  There is one additional function, <code>write_to_socket()</code>,
+  that you are asked to complete.
+<p>
+
+<p>
+  In <tt>chat_helpers.h</tt> you will find four helper functions that
+  you must write in <tt>chat_helpers.c</tt>. These functions are all
+  required by the server. Be careful to deal correctly with your
+  buffer sizes.
+</p>
+
+<p>
+  Note: <strong>DO NOT</strong> modify the <tt>.h</tt> files.
+  Also, use the macro constants defined in <tt>socket.h</tt>,
+  and assume that we may change them to different values when
+  testing your code.
+</p>
+
+<h2>Submitting Your Work</h2>
+<p>
+  Verify that your <tt>chat_client.c</tt>
+  <tt>chat_helpers.c</tt>, and <tt>socket.c</tt>
+  source files have been added to your repository, committed, and
+  pushed by the deadline to get credit for the tutorial.
+</p>
+
+<p>Congratulations&mdash;you have just finished the last tutorial!
+It's time to check out the last assignment.</p>
+
+    <section>
+      <div class="page-header">
+        <a name="comments"></a><h2>Comments</h2>
+      </div>
+      <div id="discourse-comments" class="span12">
+        <p>
+          Note: If the comments fail to load, try refreshing the page or
+          <a href="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/tutorials/t11.shtml">
+            logging into the discussion board through this link
+          </a>.
+        </p>
+      </div>
+    </section>
+
+    <!--#include virtual="../footer.html" -->
+  </main><!-- /.container -->
+  <script type="text/javascript">
+    var DiscourseEmbed = {
+      discourseUrl: 'https://mcsapps.utm.utoronto.ca/forum/',
+      topicId: 5553
+    };
+
+    function loadComments() {
+      var d = document.createElement('script'); d.type = 'text/javascript'; d.async = true;
+      d.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(d);
+    }
+
+  </script>
+
+  <!-- Begin Furkan's hack: Using a hidden iframe, automatically
+  log the user into Discourse before attempting
+  to load the comments. This will only work if this page has
+  Shibboleth authentication enabled through the .htaccess file -->
+
+  <iframe src="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/load_comments.html" style="display:none;" width="0" height="0" name="forumlogin"></iframe>
+
+  <script>
+    window.addEventListener("message", function(event) {
+      if (event.origin != "https://mcs.utm.utoronto.ca") {
+        console.log("Ignoring cross-origin message from Discourse SSO iframe: " + event.origin);
+        return;
+      }
+
+      console.log("Received same-origin message from Discourse SSO iframe: loading comments.");
+      loadComments();
+    });
+  </script>
+
+  <!-- End Furkan's hack -->
+
+</body>
+</html>

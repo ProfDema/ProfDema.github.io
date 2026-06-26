@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<!--#include virtual="../head.shtml" -->
+<body>
+  <!--#include virtual="../navbar.html" -->
+  <script>var p = document.getElementById("menu.tutorials"); p.className = "nav-item active";</script>
+  <main role="main" class="container">
+    <h1 class="mt-5">Tutorial 5: Binary I/O</h1>
+    <!--#set var="DEADLINE" value="10 p.m. on Friday, February 7, 2020" -->
+    <!--#include virtual="./deadline.shtml" -->
+    
+    <h2>Introduction</h2>
+
+<p>
+  The purpose of this lab is to get a working understanding of how to 
+  use binary IO: how to read binary data from files. This lab will 
+  also provide some practice with structs. In some sense, this lab 
+  echoes lecture: we have (or will) do a very similar exercise with 
+  a different file format.
+</p>
+
+<p>
+  This week's lab has starter code, so start with a <kbd>git pull</kbd> 
+  in your repository. You should see a new directory named t05, 
+  containing the starter code and a <code>Makefile</code> 
+  (be sure to use this to compile your code, since that's what 
+  we will be using when marking your submission).
+</p>
+
+<p>
+  Credit: This is a very cool lab put together by David Liu 
+  and Karen Reid in Fall 2017.
+</p>
+
+<h2>Background: Bitmap Images</h2>
+
+<p>
+  A 24-bit bitmap file is a simple image file format that consists 
+  of three main parts: 
+</p>
+
+<ol>
+  <li>
+    File metadata.
+  </li>
+  <li>
+    A <strong>pixel array</strong> that stores numbers 
+    corresponding to the blue, green, and red colour values 
+    of each pixel in the image (you may recall from high 
+    school science class that red, green, and blue are the 
+    three primary colours of light, from which all other 
+    colours can be derived by additive mixing). Each colour 
+    is stored as a number with a value between 0 and 255.
+  </li>
+  <li>
+    Optionally, the path to a "colour profile." For the 
+    purposes of this lab, you will ignore this section.
+  </li>
+</ol>
+
+<p>
+  At fixed locations in the file metadata, there are three 
+  important integers, each stored using exactly 4 bytes:
+</p>
+
+<ol>
+  <li>
+    At byte offset 10-13, the offset in the bitmap file 
+    where the pixel array starts.
+  </li>
+  <li>
+    At byte offset 18-21, the width of the image, in pixels.
+  </li>
+  <li>
+    At byte offset 22-25, the height of the image, in pixels.
+  </li>
+</ol>
+
+<p>
+  Suppose our bitmap image has height M and width N. We'll always 
+  assume in this lab that the width N is a multiple of 4, 
+  which simplifies the byte layout in the file. For this 
+  image, the pixel array stores exactly 3 x N x M bytes, 
+  in the following way:
+</p>
+
+<ol>
+  <li>
+    Each group of 3 bytes represents a single pixel, where the 
+    bytes store the blue, green, and red colour values of 
+    the pixel, in that order.
+  </li>
+  <li>
+    Pixels are grouped by row. For example, the first 3 x N bytes 
+    in the pixel array represent the pixels in the top-most 
+    row of the image.
+  </li>
+</ol>
+
+<p>
+  That's all you need for this lab, but if you're curious about 
+  learning more about the bitmap file format, you can start 
+  <a href="https://en.wikipedia.org/wiki/BMP_file_format">with this Wikipedia page</a>.
+</p>
+
+
+<h2>Reading Binary Data</h2>
+<p>
+  The starter code file <code>bitmap_printer.c</code> opens a 
+  bitmap for processing, and the file <code>bitmap.c</code>
+  contains functions for working with bitmaps. Your first task 
+  is to use the description of the bitmap metadata to 
+  implement the function <code>read_bitmap_metadata</code>.
+</p>
+
+<p>
+  Don't just try to read in the entire bitmap file, byte by byte. 
+  Use <code>fseek</code> to navigate to different byte locations 
+  so that you only read the three required integers. Then, you 
+  can use <code>fread</code> to read the expected number of 
+  bytes into a variable of the type you want.
+</p>
+
+<p>
+  Two bitmaps are included in the starter files for this week. 
+  You can use these files for testing. You can also use your 
+  own bitmaps, but it could be tricky. There are many variations 
+  of this file format, and we're only covering the <b>24-bit</b> 
+  version in this tutorial, so you might need to convert new 
+  images to this format yourself (and then crop the image to 
+  ensure the width is a multiple of 4).
+</p>
+
+<h2>Reading Binary Arrays</h2>
+
+<p>
+  Next, use the metadata read by <code>read_bitmap_metadata</code> 
+  to read all of the pixels. Place the pixel data into a 
+  two-dimensional array on the heap. <code>bitmap.c</code> 
+  contains a large comment explaining how to approach 
+  this problem. Note that because each pixel colour value 
+  (blue, green, or red) is stored in just one byte, the type 
+  we use is <code>unsigned char</code>: a 1 byte value that
+  represents numbers from 0 to 255 (inclusive).
+</p>
+
+<p>
+  If the <code>sizeof(struct pixel) == 3</code> on your system 
+  (check this!), you can use a single, large <code>fread</code> 
+  to get an entire row of data. If it does not, you'll need a 
+  loop that reads one struct at a time.
+</p>
+
+<p>
+  Also, you'll need to remove a <code>return</code> from 
+  <code>bitmap_printer.c</code> to allow your function to 
+  be called.
+</p>
+
+<h2>Free Your Memory</h2>
+
+<p>
+  Finally, add some code to the bottom of the <code>main</code> 
+  function in <code>bitmap_printer.c</code> to close the bitmap 
+  file and free all of the program's dynamically-allocated memory. 
+  Use <code>valgrind</code> to check that no heap memory is being 
+  leaked.
+</p>
+
+<div class="alert alert-danger" role="alert">
+  <p><b>Valgrind and Address Sanitizer:</b>: If you attempt to use Valgrind and Address Sanitizer together, Valgrind will be unable to track heap allocations. You may see errors along the lines of <code>ASan runtime does not come first in initial library list...</code>. So, to get a complete Valgrind report you will need to temporarily remove the <code>-fsanitize=address</code> compiler flag.</p>
+  <p>The easiest way to go about this would be to make use of the Address Sanitizer to locate any bugs that it is able to detect. Then, disable Address Sanitizer and use Valgrind that you do not have any other errors (such as reads on uninitialized variables).</p>
+</div>
+
+
+<h2>What to Submit</h2>
+
+<p>
+  We'll be checking your <code>bitmap_printer.c</code> and 
+  <code>bitmap.c</code> files. Please make sure both have been 
+  updated, committed, <strong>and</strong> pushed.
+</p>
+
+<p>
+  We will mark this tutorial by looking at the two required 
+  functions (1 point each) and verifying that all of the 
+  allocated memory was freed (1 point).
+</p>
+
+
+    <section>
+      <div class="page-header">
+        <a name="comments"></a><h2>Comments</h2>
+      </div>
+      <div id="discourse-comments" class="span12">
+        <p>
+          Note: If the comments fail to load, try refreshing the page or
+          <a href="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/tutorials/t05.shtml">
+            logging into the discussion board through this link
+          </a>.
+        </p>
+      </div>
+    </section>
+
+    <!--#include virtual="../footer.html" -->
+  </main><!-- /.container -->
+  <script type="text/javascript">
+    var DiscourseEmbed = {
+      discourseUrl: 'https://mcsapps.utm.utoronto.ca/forum/',
+      topicId: 4714
+    };
+
+    function loadComments() {
+      var d = document.createElement('script'); d.type = 'text/javascript'; d.async = true;
+      d.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(d);
+    }
+
+  </script>
+
+  <!-- Begin Furkan's hack: Using a hidden iframe, automatically
+  log the user into Discourse before attempting
+  to load the comments. This will only work if this page has
+  Shibboleth authentication enabled through the .htaccess file -->
+
+  <iframe src="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/load_comments.html" style="display:none;" width="0" height="0" name="forumlogin"></iframe>
+
+  <script>
+    window.addEventListener("message", function(event) {
+      if (event.origin != "https://mcs.utm.utoronto.ca") {
+        console.log("Ignoring cross-origin message from Discourse SSO iframe: " + event.origin);
+        return;
+      }
+
+      console.log("Received same-origin message from Discourse SSO iframe: loading comments.");
+      loadComments();
+    });
+  </script>
+
+  <!-- End Furkan's hack -->
+
+</body>
+</html>

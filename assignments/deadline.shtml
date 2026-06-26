@@ -1,0 +1,5 @@
+<br>
+<div class="alert alert-primary" role="alert">
+    <b>Due</b>: <!--#echo encoding="none" var="DEADLINE" --> (submit to your MarkUs git repository). Since this tutorial will be marked by automated scripts, please ensure that you follow the submission instructions <strong>exactly</strong>, including the required file names and directory structure.
+</div>
+<br>

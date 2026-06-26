@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<!--#include virtual="../head.shtml" -->
+<body>
+  <!--#include virtual="../navbar.html" -->
+  <script>var p = document.getElementById("menu.tutorials"); p.className = "nav-item active";</script>
+  <main role="main" class="container">
+    <h1 class="mt-5">Tutorial 3: Pointers and Reading from Standard Input</h1>
+    <!--#set var="DEADLINE" value="10 p.m. on Friday, January 24, 2020" -->
+    <!--#include virtual="./deadline.shtml" -->
+<h2>Introduction</h2>
+
+<p>
+The purpose of this lab is to practice two elements of C that you'll need for the assignment that is due next week: pointers and reading from <code>stdin</code>. At the end of last week's lab, we promised to look at valgrind, but we've put that off a week to give you more time for the assignment. 
+</p>
+
+<p>
+This week's lab has starter code, so start with a <kbd>git pull</kbd> in your repository. You should see a new directory named t03, containing two C files and a Makefile.
+</p>
+
+<h2>Pointers</h2>
+
+<p>
+The C files in the starter code contain <code>main()</code> functions that process input from the command line and call a helper function. Your job, in both cases, is to complete the helper function so that it works without changing the <code>main()</code> function. 
+</p>
+
+<ol>
+	<li><strong>invest.c</strong>: Implement a function <code>invest()</code> that takes an amount of money and multiplies it by a given rate. It's your job to figure out the exact type of this function's arguments, given the sample usage in the <code>main()</code> function in the starter code.</li>
+	<li><strong>score_card.c</strong>: Implement a function <code>sum_card()</code> that takes an array of pointers to integers and returns the sum of the integers referenced by the array. You should also free any dynamically allocated memory to avoid any errors due to memory leaks.</li>
+</ol>
+
+<h3>Using <code>scanf()</code></h3>
+<p>
+This part does not have starter code. Your job is to write a program that reads phone numbers from standard input using <code>scanf()</code>. This task is related to the assignment, so I encourage you to work on it in the lab, with help from your TA and peers. (Remember: The assignments are individual work. This is you chance to work with your friends before demonstrating what you can do.) 
+</p>
+
+<p>
+If you did not watch the PCRS video <a href="https://pcrs.utm.utoronto.ca/209/content/challenges/101/1#video-100">Input, Output, and Compiling: Reading Input (scanf)</a>, you may want to start by watching it.
+</p>
+
+<p>
+Your program should be implemented in a file named <code>phone.c</code>. The program takes no command line arguments. Instead, it will read one line at a time from standard input until the stream is closed. Each line will contain two elements: a 10 character string and an integer. 
+</p>
+
+<p>
+If the integer is zero, the program prints the full string to standard output followed by a single newline <code>\n</code> character. If the integer is between 1 and 9 inclusive, the program only prints the corresponding digit from the string to standard output (again followed by a newline). After printing the requested output, the program should read and process the next line from standard input. 
+</p>
+
+<p>
+Once all of the input has been processed, the program should terminate and return 0.
+</p>
+
+<div class="alert alert-success" role="alert">
+	<p><b>Command-line arguments:</b>: If the user passes in [phone number] 0, the program should print the entire phone number starting from index 0 of the phone number array. If the user passes in [phone number] N, where N is an integer between 1 and 9, the program should print only the element at index N of the phone number array.</p>
+</div>
+
+<div class="alert alert-success" role="alert">
+	<p><b>Reaching end-of-input:</b><br/> In a UNIX terminal, you can signal the end-of-input by pressing <kbd><kbd>ctrl</kbd>+<kbd>d</kbd></kbd> on a blank line. This will signal to <code>scanf()</code> that there is no more input to process. Also see <kbd>man scanf</kbd> and search for <code>EOF</code>.</p>
+</div>
+
+<h3>Validating Input Length</h3>
+
+<p>Writing your program under the assumption that the input will always follow a certain set of rules (e.g., assuming that a user will never type in a phone number that is more than 10 digits in length, or that they will only type in numbers, but no other characters) is a major cause of bugs, and security vulnerabilities in particular. Improper input validation ranks third place in the <a href="https://cwe.mitre.org/top25/archive/2019/2019_cwe_top25.html">CWE Top 25 Most Dangerous Software Errors</a>. Let us focus here on validating the <em>length</em> of the input.</p>
+
+<p><code>scanf()</code> allows you to specify a <em>field width</em> in the <em>conversion specifier</em>. For example, the conversion spcifier <code>%16c</code> (if you use <code>%c</code>, make sure you understand the difference between that and <code>%s</code>, explained in <code>man 3 scanf</code>) tells <code>scanf()</code> to read a series of up to 16 characters into your character array (i.e., any additional characters are ignored). This helps you to avoid <em>buffer overflow</em>, in case your character array is not large enough to store all the input characters (buffer overflow ranks first place in the above-linked top 25 most dangerous software errors).</p>
+
+<p>With this knowledge, update your program <code>phone.c</code> to place a limit on the maximum number of characters that <code>scanf()</code> should read. In the event that oversized input is provided by the user (whether for the phone number string or the integer that follows it), your program should not make any unsafe memory accesses, i.e., it should run without crashing when compiled with the <code>-fsanitize=address</code> flag. Ideally your program should print any one-line message (or an error message) followed by a single newline <code>\n</code> character, and proceed to process the next line from standard input. However, you might find instead that your program begins to give incorrect results for subsequent values that you enter&mdash;you don't need to worry about that for this tutorial (as long as your program doesn't segfautl), but if you are curious about why that happens you may <a href="http://sekrit.de/webdocs/c/beginners-guide-away-from-scanf.html">check out this page</a> and <a href="https://mcsapps.utm.utoronto.ca/forum/t/tutorial-3-faq-and-general-discussion/4203/2?u=alacafur">this post on the forum</a>.
+
+
+<div class="alert alert-success" role="alert">
+  <p><b>Sample output:</b><br/> Your program should print out exactly what is described in the instructions above (no more, and no less). Here is some sample output:</p>
+	<pre>
+$ <kbd>./phone</kbd>
+<kbd>9134874672 0</kbd>
+9134874672
+<kbd>9134874672 1</kbd>
+1
+<kbd>9134874672 5</kbd>
+7
+<kbd>9134874672 9</kbd>
+2
+<kbd>91348746721 5</kbd>
+1
+<kbd>9134874672 299</kbd>
+2
+	</pre>
+    
+        <p>Note that in the second-last line of input, the <code>5</code> character is ignored, because of the extra <code>1</code> digit attached to the phone number, and in the last line where the user attempts to print the <code>299</code>th digit, the program prints the last digit instead; but again, we are not imposing any requirements for what your program should print for invalid input (as long as it does not segfault).</p>
+</div>
+
+<h3>Assignment Tip: More On Input Validation</h3>
+
+<p>You might have noticed that <code>scanf()</code> format specifiers can be difficult to deal with. For Assignment 1, it might be easier to simply read a whole line of input, either with <code>scanf("%Ns", str)</code> (where <code>N+1</code> is the size of your array) or <code>fgets()</code>, and to use <code>strtol()</code> to read the individual numbers that you need. But either approach can be used, if done correctly (i.e., no unsafe memory accesses should be made, and there is no "correctness" requirement in how to process invalid input, other than terminating gracefully).</p>
+
+    <section>
+      <div class="page-header">
+        <a name="comments"></a><h2>Comments</h2>
+      </div>
+      <div id="discourse-comments" class="span12">
+        <p>
+          Note: If the comments fail to load, try refreshing the page or
+          <a href="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/tutorials/t03.shtml">
+            logging into the discussion board through this link
+          </a>.
+        </p>
+      </div>
+    </section>
+
+    <!--#include virtual="../footer.html" -->
+  </main><!-- /.container -->
+  <script type="text/javascript">
+    var DiscourseEmbed = {
+      discourseUrl: 'https://mcsapps.utm.utoronto.ca/forum/',
+      topicId: 4203
+    };
+
+    function loadComments() {
+      var d = document.createElement('script'); d.type = 'text/javascript'; d.async = true;
+      d.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(d);
+    }
+
+  </script>
+
+  <!-- Begin Furkan's hack: Using a hidden iframe, automatically
+  log the user into Discourse before attempting
+  to load the comments. This will only work if this page has
+  Shibboleth authentication enabled through the .htaccess file -->
+
+  <iframe src="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/load_comments.html" style="display:none;" width="0" height="0" name="forumlogin"></iframe>
+
+  <script>
+    window.addEventListener("message", function(event) {
+      if (event.origin != "https://mcs.utm.utoronto.ca") {
+        console.log("Ignoring cross-origin message from Discourse SSO iframe: " + event.origin);
+        return;
+      }
+
+      console.log("Received same-origin message from Discourse SSO iframe: loading comments.");
+      loadComments();
+    });
+  </script>
+
+  <!-- End Furkan's hack -->
+
+</body>
+</html>
+

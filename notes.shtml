@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<!--#include virtual="head.shtml" -->
+<body>
+  <!--#include virtual="navbar.html" -->
+  <script>var p = document.getElementById("menu.notes"); p.className = "nav-item active";</script>
+  <main role="main" class="container">
+    <h1 class="mt-5">Lecture Notes</h1>
+
+    <div id="lectureNotes">
+      <div class="card">
+        <div class="card-header" id="h01">
+          <h2 class="mb-0">
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#w01" aria-expanded="true" aria-controls="w01">
+              Week 1 (Jan. 6&mdash;10): Administrivia and the Shell
+            </button>
+          </h2>
+        </div>
+        <div id="w01" class="collapse" aria-labelledby="h01" data-parent="#lectureNotes">
+          <div class="card-body">
+            <h3>Lecture Slides (Intro to the Shell):</h3>
+            <ul>
+              <li><a href="./lectures/w01.html">Interactive web slides</a></li>
+              <li>
+                <a href="./lectures/w01.html?print-pdf">Printable slides</a>
+                (Print to landscape PDF in Chromium-based browser)
+              </li>
+            </ul>
+            <h3>Related Readings:</h3>
+            <ul>
+              <li><strong>Highly-recommended reading:</strong> Chapter 2 of Unix Shell Programming by Kochan &amp; Wood (available electronically via UTM library). <a href="./handouts/w01/shellprogramming-ch2.pdf">PDF printout for UofT students</a> <em>available in accordance with fair dealing provisions of the Copyright Act</em>.<br/></li>
+              <li><a href="./handouts/w01/ap_shell.txt">Annotated sample shell transcript</a> (Courtesy of Andrew Petersen)<br/></li>
+              <li>Directory traversal, copying/moving files: <kbd>man intro</kbd> (also covered by the book chapter above)</li>
+              <li>Globbing: <kbd>man glob</kbd> (also covered by book chapter above)<br/></li>
+              <li><a href="https://wiki.archlinux.org/index.php/File_permissions_and_attributes">Arch Wiki: File permissions and attributes</a> (also: <kbd>man chmod</kbd>)<br/></li>
+              <li>Usage guide for man pages: <kbd>man man-pages</kbd></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" id="h02">
+          <h2 class="mb-0">
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#w02" aria-expanded="true" aria-controls="w02">
+              Week 2 (Jan. 13&mdash;17): Intro to C: Arrays and Pointers
+            </button>
+          </h2>
+        </div>
+        <div id="w02" class="collapse" aria-labelledby="h02" data-parent="#lectureNotes">
+          <div class="card-body">
+            <h3>Lecture Preparation (before class):</h3>
+            <ul>
+              <li>PCRS Week 2 Preparation due Sun. Jan. 12, 10:00pm</li>
+            </ul>
+            <h3>Lecture Materials:</h3>
+            <ul>
+              <li><a href="./lectures/w02.html">Interactive web slides</a></li>
+              <li>
+                <a href="./lectures/w02.html?print-pdf">Printable slides</a>
+                (Print to landscape PDF in Chromium-based browser)
+              </li>
+              <li><a href="./handouts/w02/intro_c.pdf">Intro to C Worksheet</a> (<a href="./handouts/w02/intro_c.pdf">Large Font</a>)</li>
+              <li><a href="./handouts/w02/arrays.pdf">Arrays Worksheet</a> (<a href="./handouts/w02/arrays_large.pdf">Large Font</a>)</li>
+              <li><a href="./handouts/w02/pointers.pdf">Pointers Worksheet</a> (<a href="./handouts/w02/pointers_large.pdf">Large Font</a>)</li>
+            </ul>
+            <h3>Related Readings:</h3>
+            <ul>
+              <li><a href="https://cs61.seas.harvard.edu/site/2018/Datarep4/">C pointers and undefined behaviour</a></li>
+              <li><a href="https://go.utlib.ca/cat/6676720">King</a>, Ch. 7-8 and 11-12</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header" id="h03">
+          <h2 class="mb-0">
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#w03" aria-expanded="true" aria-controls="w03">
+              Week 3 (Jan. 20&mdash;24): Dynamic Memory Allocation and Command-Line Arguments
+            </button>
+          </h2>
+        </div>
+        <div id="w03" class="collapse" aria-labelledby="h03" data-parent="#lectureNotes">
+          <div class="card-body">
+            <h3>Lecture Preparation (before class):</h3>
+            <ul>
+              <li>PCRS Week 3 Preparation due Sun. Jan. 19, 10:00pm</li>
+            </ul>
+            <h3>Lecture Materials:</h3>
+            <ul>
+              <li><a href="./lectures/w03.html">Interactive web slides</a></li>
+              <li>
+                <a href="./lectures/w03.html?print-pdf">Printable slides</a>
+                (Print to landscape PDF in Chromium-based browser)
+              </li>
+              <li><a href="./handouts/w03/args.pdf">Arguments Worksheet</a> (<a href="./handouts/w03/args_large.pdf">Large Font</a>)</li>
+              <li>Page 1 of <a href="./handouts/w03/malloc.pdf">Malloc and Strings Worksheet</a> (<a href="./handouts/w03/malloc_large.pdf">Large Font</a>)</li>
+            </ul>
+            <h3>Related Readings:</h3>
+            <ul>
+              <li><a href="https://mcsapps.utm.utoronto.ca/forum/t/required-reading-1000-words-everything-you-need-to-know-about-hexadecimal-decimal-and-binary/4133?u=alacafur">Everything you need to know about hexadecimal, decimal, and binary</a></li>
+              <li><a href="https://github.com/google/sanitizers/wiki/AddressSanitizer">Memory corruption bugs detected by Google's AddressSanitizer tool</a> (enabled by <code>-fsanitize=address</code> gdb compiler flag)</li>
+              <li><a href="https://go.utlib.ca/cat/6676720">King</a>, Ch. 17.1-17.4, 17.6</li>
+              <li><a href="https://go.utlib.ca/cat/10030432">Kerrisk</a>, Ch. 7.1</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" id="h04">
+          <h2 class="mb-0">
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#w04" aria-expanded="true" aria-controls="w04">
+              Week 4 (Jan. 27&mdash;Jan. 31): Strings
+            </button>
+          </h2>
+        </div>
+        <div id="w04" class="collapse" aria-labelledby="h04" data-parent="#lectureNotes">
+          <div class="card-body">
+            <h3>Lecture Preparation (before class):</h3>
+            <ul>
+              <li>PCRS Week 4 Preparation due Sun. Jan. 26, 10:00pm</li>
+            </ul>
+            <h3>Lecture Materials:</h3>
+            <ul>
+              <li><a href="./lectures/w04.html">Interactive web slides</a></li>
+              <li>
+                <a href="./lectures/w04.html?print-pdf">Printable slides</a>
+                (Print to landscape PDF in Chromium-based browser)
+              </li>
+              <li>Page 2 of <a href="./handouts/w03/malloc.pdf">Malloc and Strings Worksheet</a> (<a href="./handouts/w03/malloc_large.pdf">Large Font</a>)</li>
+            </ul>
+            <h3>Related Readings:</h3>
+            <ul>
+              <li><a href="https://go.utlib.ca/cat/6676720">King</a>, Ch. 16.1-16.2</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" id="h05">
+          <h2 class="mb-0">
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#w05" aria-expanded="true" aria-controls="w05">
+              Week 5 (Feb. 3&mdash;7): Structs and I/O
+            </button>
+          </h2>
+        </div>
+        <div id="w05" class="collapse" aria-labelledby="h05" data-parent="#lectureNotes">
+          <div class="card-body">
+            <h3>Lecture Preparation (before class):</h3>
+            <ul>
+              <li>PCRS Week 5 Preparation due Sun. Feb. 2, 10:00pm</li>
+            </ul>
+            <h3>Lecture Materials:</h3>
+            <ul>
+              <li><a href="./lectures/w05.html">Interactive web slides</a></li>
+              <li>
+                <a href="./lectures/w05.html?print-pdf">Printable slides</a>
+                (Print to landscape PDF in Chromium-based browser)
+              </li>
+              <li><a href="./handouts/w05/structs.pdf">Structs Worksheet</a> (<a href="./handouts/w05/structs_large.pdf">Large Font</a>)</li>
+              <li><a href="./handouts/w05/literals-struct.pdf">Inspecting Executables Worksheet</a> (<a href="./handouts/w05/literals-struct_large.pdf">Large Font</a>) (<a href="./handouts/w05/starter.tgz">Starter Code</a>)</li>
+              <li>Man page for ELF: <kbd>man elf</kbd> from terminal, or <a href="http://man7.org/linux/man-pages/man5/elf.5.html">online HTML version</a></li>
+            </ul>
+            <h3>Related Readings:</h3>
+            <ul>
+              <li><a href="https://go.utlib.ca/cat/6676720">King</a>, Ch. 16.1-16.2, 22.1-22.2</li>
+              <li><a href="https://go.utlib.ca/cat/10030432">Kerrisk</a>, Ch. 4.1-4.6</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" id="h06">
+          <h2 class="mb-0">
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#w06" aria-expanded="true" aria-controls="w06">
+              Week 6 (Feb. 10&mdash;14): Makefiles and C Miscellany
+            </button>
+          </h2>
+        </div>
+        <div id="w06" class="collapse" aria-labelledby="h06" data-parent="#lectureNotes">
+          <div class="card-body">
+            <h3>Lecture Preparation (before class):</h3>
+            <ul>
+              <li>PCRS Week 6 Preparation due Sun. Feb. 9, 10:00pm</li>
+            </ul>
+            <h3>Lecture Materials:</h3>
+            <ul>
+              <li><a href="./lectures/w06.html">Interactive web slides</a></li>
+              <li>
+                <a href="./lectures/w06.html?print-pdf">Printable slides</a>
+                (Print to landscape PDF in Chromium-based browser)
+              </li>
+              <li><a href="./handouts/w06/makefiles.pdf">Makefiles Worksheet</a> (<a href="./handouts/w06/makefiles_large.pdf">Large Font</a>)</li>
+              <li><a href="./handouts/w06/errors.pdf">Errno Worksheet</a> (<a href="./handouts/w06/errors_large.pdf">Large Font</a>)</li>
+            </ul>
+            <h3>Related Readings:</h3>
+            <ul>
+              <li><a href="https://go.utlib.ca/cat/6676720">King</a>, Ch. 24.2 (errno)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card d-none">
+        <div class="card-header" id="hrwk">
+          <h2 class="mb-0">
+            <button class="btn btn-primary disabled" type="button" aria-expanded="true"> 
+              Reading Week (Feb. 17&mdash;21): No classes
+            </button>
+          </h2>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" id="h07">
+          <h2 class="mb-0">
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#w07" aria-expanded="true" aria-controls="w07">
+              Week 7 (Feb. 24&mdash;Feb. 28): Processes, Forking
+            </button>
+          </h2>
+        </div>
+        <div id="w07" class="collapse" aria-labelledby="h07" data-parent="#lectureNotes">
+          <div class="card-body">
+            <h3>Lecture Preparation (before class):</h3>
+            <ul>
+              <li>PCRS Week 7 Preparation due Sun. Feb. 23, 10:00pm</li>
+            </ul>
+            <h3>Lecture Materials:</h3>
+            <ul>
+              <li><a href="./lectures/w07.html">Interactive web slides</a></li>
+              <li>
+                <a href="./lectures/w07.html?print-pdf">Printable slides</a>
+                (Print to landscape PDF in Chromium-based browser)
+              </li>
+              <li><a href="./handouts/w07/fork.pdf">Fork Worksheet</a> (<a href="./handouts/w07/fork_large.pdf">Large Font</a>) <strong></strong></li>
+            </ul>
+            <h3>Sample Midterms:</h3>
+            <ul>
+              <li><a href="./handouts/samples/w17_midterm.pdf">Winter 2017 (UTM)</a></li>
+              <li><a href="./handouts/samples/f15_midterm.pdf">Fall 2015 (UTSG)</a></li>
+              <li><a href="https://mcs.utm.utoronto.ca/~zingarod/209/tests.html">Dan Zingaro's collection</a></li>
+            </ul>
+            <h3>Related Readings:</h3>
+            <ul>
+              <li><a href="https://go.utlib.ca/cat/10030432">Kerrisk</a>, Ch 24.1, 24.2, 24.4, 25.1, 25.2, 25.4, 26 (process lifecycle) </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" id="h08">
+          <h2 class="mb-0">
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#w08" aria-expanded="true" aria-controls="w08">
+              Week 8 (Mar. 2&mdash;6): Pipes
+            </button>
+          </h2>
+        </div>
+        <div id="w08" class="collapse" aria-labelledby="h08" data-parent="#lectureNotes">
+          <div class="card-body">
+            <h3>Lecture Preparation (before class):</h3>
+            <ul>
+              <li>PCRS Week 8 Preparation due Sun. Mar. 1, 10:00pm</li>
+            </ul>
+            <h3>Lecture Materials:</h3>
+            <ul>
+              <li><a href="./lectures/w08.html">Interactive web slides</a></li>
+              <li>
+                <a href="./lectures/w08.html?print-pdf">Printable slides</a>
+                (Print to landscape PDF in Chromium-based browser)
+              </li>
+              <li><a href="./handouts/w08/pipe.pdf">Pipe Worksheet</a> (<a href="./handouts/w08/pipe_large.pdf">Large Font</a>) <strong></strong></li>
+            </ul>
+            <h3>Related Readings:</h3>
+            <ul>
+              <li><a href="https://go.utlib.ca/cat/10030432">Kerrisk</a>, Ch 44 (Pipes) </li>
+            </ul>
+          </div>
+        </div>
+      </div> 
+
+
+      <div class="card">
+        <div class="card-header" id="h09">
+          <h2 class="mb-0">
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#w09" aria-expanded="true" aria-controls="w09">
+              Week 9 (Mar. 9&mdash;13): Signals
+            </button>
+          </h2>
+        </div>
+        <div id="w09" class="collapse" aria-labelledby="h09" data-parent="#lectureNotes">
+          <div class="card-body">
+            <h3>Lecture Preparation (before class):</h3>
+            <ul>
+              <li>PCRS Week 9 Preparation due Sun. Mar. 8, 10:00pm</li>
+            </ul>
+            <h3>Lecture Materials:</h3>
+            <ul>
+              <li><a href="./lectures/w09.html">Interactive web slides</a></li>
+              <li>
+                <a href="./lectures/w09.html?print-pdf">Printable slides</a>
+                (Print to landscape PDF in Chromium-based browser)
+              </li>
+              <li><a href="./handouts/w09/signals.pdf">Signals Worksheet</a> (<a href="./handouts/w09/signals_large.pdf">Large Font</a>) <strong></strong></li>
+            </ul>
+            <h3>Related Readings:</h3>
+            <ul>
+              <li><a href="https://go.utlib.ca/cat/10030432">Kerrisk</a>, Ch 20-21 (Signals and Signal Handlers) </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" id="h10">
+          <h2 class="mb-0">
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#w10" aria-expanded="true" aria-controls="w10">
+              Week 10 (Mar. 16&mdash;20): Sockets
+            </button>
+          </h2>
+        </div>
+        <div id="w10" class="collapse" aria-labelledby="h10" data-parent="#lectureNotes">
+          <div class="card-body">
+            <h3>Lecture Preparation (before class):</h3>
+            <ul>
+              <li>PCRS Week 10 Preparation due Sun. Mar. 15, 10:00pm</li>
+            </ul>
+            <h3>Lecture Materials:</h3>
+            <ul>
+              <li><a href="./lectures/w10.html">Interactive web slides</a></li>
+              <li>
+                <a href="./lectures/w10.html?print-pdf">Printable slides</a>
+                (Print to landscape PDF in Chromium-based browser)
+              </li>
+              <li><a href="./handouts/w10/sockets.pdf">Sockets Worksheet</a> (<a href="./handouts/w09/sockets_large.pdf">Large Font</a>) <strong></strong> and <a href="./handouts/w10/lego_game.c">Starter Code</a></li>
+            </ul>
+            <h3>Related Readings:</h3>
+            <ul>
+              <li><a href="https://go.utlib.ca/cat/10030432">Kerrisk</a>, Ch 56-58 (Intro. to Sockets) </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" id="h11">
+          <h2 class="mb-0">
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#w11" aria-expanded="true" aria-controls="w11">
+              Week 11 (Mar. 23&mdash;27): Select
+            </button>
+          </h2>
+        </div>
+        <div id="w11" class="collapse" aria-labelledby="h11" data-parent="#lectureNotes">
+          <div class="card-body">
+            <h3>Lecture Materials:</h3>
+            <ul>
+              <li><a href="./lectures/w11.html">Interactive web slides</a></li>
+              <li>
+                <a href="./lectures/w11.html?print-pdf">Printable slides</a>
+                (Print to landscape PDF in Chromium-based browser)
+              </li>
+              <li><a href="./handouts/w11/select.pdf">Select Worksheet</a> (<a href="./handouts/w11/select_large.pdf">Large Font</a>) <strong></strong></li>
+              <!--<li>Also: Code examples from last week's slides</li>
+              <li>TCP traffic capture tool used in class: <code>tcpdump</code> (requires administrative privileges to use: <kbd>sudo apt install tcpdump</kbd> to install on an Ubuntu system, and <kbd>man tcpdump</kbd> for usage instructions). Sample usage to dump traffic on TCP port 9000 on all network interfaces: <kbd>sudo tcpdump -i any -X tcp port 9000</kbd> (the <kbd>-X</kbd> flag displays the TCP segment contents in hexadecimal and ASCII).</li>
+              <li>Code examples from class: <a href="./handouts/w11/whocon2.c">whocon.c</a> and <a href="./handouts/w11/netcat_client.c">netcat_client.c</a>.</li>
+              <li>Note that the "netcat" example above contains commented code that uses library functions from <code>termios.h</code> to disable <strong>canonical mode</strong> in the shell, which disables the shell's line-buffering functionality and allows you to send one character at a time (instead of waiting for the newline).</li>
+              <li><kbd>ifconfig</kbd>: Lists your network interfaces.</li>
+              <li><kbd>netstat -a</kbd>: Lists both your active and passive sockets currently open on your system.</li>
+              <li><kbd>netstat -i</kbd>: Lists your network interfaces (less detailed than <kbd>ifconfig</kbd>), and includes the MTU (which is the maximum size, in bytes, of the data that can be sent over that interface/connection before it needs to be split up into multiple packets). Notice that the MTU for your loopback interface (<code>lo</code>, used to communicate on your local machine via the <code>127.0.0.1</code> IP address) is much bigger than the MTU of your "real" network interface(s).</li>-->
+            </ul>
+            <h3>Related Readings:</h3>
+            <ul>
+              <li><a href="https://go.utlib.ca/cat/10030432">Kerrisk</a>, Ch 63.1-63.2.1 (Select) </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" id="h12">
+          <h2 class="mb-0">
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#w12" aria-expanded="true" aria-controls="w12">
+              Week 12 (Mar. 30&mdash;Apr. 3): Exam Review
+            </button>
+          </h2>
+        </div>
+
+        <div id="w12" class="collapse show" aria-labelledby="h12" data-parent="#lectureNotes">
+          <div class="card-body">
+            <!--<h3>Lecture Materials:</h3>
+            <ul>
+              <li><a href="./lectures/w12.html">Interactive web slides</a></li>
+              <li>
+                <a href="./lectures/w12.html?print-pdf">Printable slides</a>
+                (Print to landscape PDF in Chromium-based browser)
+              </li>
+              <li>Code examples from class: <a href="./handouts/w12/bad_share.c">bad_share.c</a> and <a href="./handouts/w12/mutex.c">mutex.c</a>.</li>
+            </ul>
+            <h3>Related Readings:</h3>
+            <ul>
+              <li><a href="https://go.utlib.ca/cat/10030432">Kerrisk</a>, Ch 30-31 (Threads) </li>
+            </ul>-->
+            <p>Reminder: The exam will be held online, on Quercus, at (roughly) the originally scheduled date and time: 5-7PM Toronto time, April 13, 2020.</p>
+            <h3>Sample Exams:</h3>
+            <ul>
+              <li><a href="https://mcs.utm.utoronto.ca/~zingarod/209/tests.html">Dan Zingaro's collection</a></li>
+              <li><a href="http://www.cs.toronto.edu/~reid/csc209/tests/">Karen Reid's collection</a></li>
+              <li><a href="http://exams.library.utoronto.ca.myaccess.library.utoronto.ca/">UTM Library Old Exams Repository</a></li>
+            </ul>
+            <!-- <h3>Exam-Writing Tip:</h3>
+            <p>As mentioned in class, the exam will consist of X multiple-choice questions and Y long-answer questions. My recommendation is that you first complete the multiple-choice questions, without spending more than about 2 minutes on each one. Then, move on to the long answer questions to ensure that you give yourself enough time to complete those. Then, you may go back and review the questions that you are not sure about. Don't get stuck on any question until you do a complete pass over the whole exam!</p>-->
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+
+  </main><!-- /.container -->
+  <!--#include virtual="footer.html" -->
+
+</body>
+</html>

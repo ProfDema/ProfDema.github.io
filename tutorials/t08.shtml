@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<!--#include virtual="../head.shtml" -->
+<body>
+  <!--#include virtual="../navbar.html" -->
+  <script>var p = document.getElementById("menu.tutorials"); p.className = "nav-item active";</script>
+  <main role="main" class="container">
+  <h1 class="mt-5">Tutorial 8: Pipes, Fork, Exec, and Dup2</h1>
+    <!--#set var="DEADLINE" value="10 p.m. on Friday, March 6, 2020" -->
+    <!--#include virtual="./deadline.shtml" -->
+    <h2>Introduction</h2>
+
+<p>
+In any application that requires a user to login, the user ID and password
+must be validated. One approach to validation is to hand the task off to
+a separate process. The data is transferred to the new process over stdin;
+we wouldn't want to provide a password as a command-line argument, since
+that has a number of security risks, e.g., the password would be visible
+to programs such as ps that read the contents of the <code>/proc</code>
+directory (recall Assignment 2), and the password would also be visible
+in your <tt>.bash_history</tt> file (which keeps a history of the commands
+that you run in your bash terminal).
+</p>
+
+<p>
+For this tutorial, you have been given a program called <tt>validate</tt>
+that validates user ID and password. (Check your git repository for the 
+source code.) Your task is to apply what you've learned about processes
+and pipes to create a program that runs this validation program in a child
+process and reports the result of the validation. 
+</p>
+
+<h2>Step 1: Study validate.c</h2>
+<p>
+Spend some time reading, compiling, and playing with the <tt>validate</tt>
+program. Here are some questions that you'll need to answer as you explore
+the code:
+</p>
+<ul>
+	<li>How does <tt>validate</tt> get input?</li>
+	<li>How many bytes does <tt>validate</tt> expect to receive on each call to
+        <tt>read</tt>?</li>
+	<li>Does <tt>validate</tt> expect end of line characters? Null terminated strings?</li>
+	<li>How does <tt>validate</tt> report whether the username and password it has
+        received are valid?</li>
+</ul>
+
+<p>
+The questions above are just to help you understand - no need to actually submit your answers.
+</p>
+
+<h2>Step 2: Create checkpasswd.c</h2>
+<p>
+Your task is to complete <tt>checkpasswd.c</tt>, which reads a user ID and
+password from <tt>stdin</tt>, creates a new process to run the <tt>validate</tt>
+program, sends it the user id and password, and prints a message to <code>stdout</code>
+reporting whether the given user id-password pair is valid.
+</p>
+
+<p>
+Your program should print one of three messages (which are defined in your starter
+code as constants):
+</p>
+
+<ul>
+	<li>"Password verified\n" if the user id and password match.</li>
+	<li>"Invalid password\n" if the user id exists but the password does not match.</li>
+	<li>"No such user\n" if the user id is not recognized (or is invalid).</li>
+</ul>
+
+<p>
+Any password (or user name) that violates the character limit is considered invalid.
+Any such entries in the <tt>pass.txt</tt> file provided in your starter code are
+meant as test cases for you to try when testing your program.
+Note that the given password file contains a few entries that are invalid. Those
+examples are expected to fail, but you may find them useful for testing.
+</p>
+
+<p>
+You may <b>not</b> use <code>popen</code> in your solution. The goal is to practice
+with <code>fork</code> and <code>wait</code>, <code>exec</code>, <code>pipe</code>, and <code>dup2</code>.
+</p>
+
+<h2>Hints</h2>
+<p>As a refresher, consider the contrasting behaviour of <code>fork</code> versus the <code>exec</code> family of functions:</p>
+<ol>
+	<li><code>fork</code> creates a <strong>new</strong> process (which is a child of the original process). The child process will be <strong>nearly identical</strong> to its parent, with the exception of having a different PID and return value from the <code>fork</code> invocation.</li>
+	<li>The <code>exec</code> family of functions <strong>replaces the existing process image with that of a new program</strong>, but <strong>no new process is created</strong>. In other words, the existing process turns into a completely different program, but retains the same PID as the previously-running program.</li>
+	<li>Both in the case of (1) a process that loads a new program into memory as a result of <code>exec</code>, or (2) a child process forked from a parent, the operating system allows the process to <strong>inherit</strong> all open file descriptors. In other words, if a process calls <code>exec</code> to load a new program into memory, the new program will have access to all the open files that the previously-running program had access to.</li>
+	<li>The above point does not hold true for <code>popen</code> (which, again, you shouldn't use in this tutorial), which is used for loading a new program into a completely new process.</li>
+</ol>
+
+<p>So, considering the above points, it shouldn't be surprising that if, for example, process A redirects <code>stdout</code> to a file  and subsequently invokes a new program with <code>exec</code>, any <code>printf</code> statements in the new program will have their output redirected to that file instead of showing up on your screen.</p>
+
+<p>Finally: For usage of the <code>exec</code> functions, you may want to refer to (1) PCRS, (2) the last 6 pages of the Week 7 slides, and (3) <kbd>man exec</kbd>.</p>
+
+<h2>What to Submit</h2>
+
+<p>
+Commit and push your updated version of <tt>checkpasswd.c</tt> to the git repository.
+We will not be checking any other files.
+</p>
+
+
+    <section>
+      <div class="page-header">
+        <a name="comments"></a><h2>Comments</h2>
+      </div>
+      <div id="discourse-comments" class="span12">
+        <p>
+          Note: If the comments fail to load, try refreshing the page or
+          <a href="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/tutorials/t08.shtml">
+            logging into the discussion board through this link
+          </a>.
+        </p>
+      </div>
+    </section>
+
+    <!--#include virtual="../footer.html" -->
+  </main><!-- /.container -->
+  <script type="text/javascript">
+    var DiscourseEmbed = {
+      discourseUrl: 'https://mcsapps.utm.utoronto.ca/forum/',
+      topicId: 5312
+    };
+
+    function loadComments() {
+      var d = document.createElement('script'); d.type = 'text/javascript'; d.async = true;
+      d.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(d);
+    }
+
+  </script>
+
+  <!-- Begin Furkan's hack: Using a hidden iframe, automatically
+  log the user into Discourse before attempting
+  to load the comments. This will only work if this page has
+  Shibboleth authentication enabled through the .htaccess file -->
+
+  <iframe src="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/load_comments.html" style="display:none;" width="0" height="0" name="forumlogin"></iframe>
+
+  <script>
+    window.addEventListener("message", function(event) {
+      if (event.origin != "https://mcs.utm.utoronto.ca") {
+        console.log("Ignoring cross-origin message from Discourse SSO iframe: " + event.origin);
+        return;
+      }
+
+      console.log("Received same-origin message from Discourse SSO iframe: loading comments.");
+      loadComments();
+    });
+  </script>
+
+  <!-- End Furkan's hack -->
+
+</body>
+</html>

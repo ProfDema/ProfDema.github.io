@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+<!--#include virtual="../head.shtml" -->
+<body>
+  <!--#include virtual="../navbar.html" -->
+  <script>var p = document.getElementById("menu.tutorials"); p.className = "nav-item active";</script>
+  <main role="main" class="container">
+    <h1 class="mt-5">Tutorial 10: Sockets</h1>
+    <!--#set var="DEADLINE" value="10 p.m. on Friday, March 20, 2020" -->
+    <!--#include virtual="./deadline.shtml" -->
+    <h2>Introduction</h2>
+
+<p>
+The purpose of this exercise is to practice using the socket-related
+system calls. This tutorial will serve as the first milestone for completing
+Assignment 4. In other words: <b>all the code that you write for this tutorial
+will be directly re-used for Assignment 4</b>. It's important that you complete
+it, and once you do, you can be confident that you are making the expected
+progress on the last assignment.</p>
+
+<p>In this tutorial, we will be managing a single connection at a time, so
+we will not be using <code>select</code>. That is the topic for next week's lab.
+</p>
+
+<p>
+The system calls and Unix programming concepts you will be using
+in this exercise are:
+</p>
+<ul>
+  <li>Creating a socket with the <code>socket</code> system call</li>
+  <li>
+    On the server-side: binding the socket to a network address
+    and port to listen for and accept incoming connections using the
+    <code>bind</code>, <code>listen</code>, and <code>accept</code>
+    system calls.
+  </li>
+  <li>
+    On the client-side: connecting to a server using the
+    <code>connect</code> system call.
+  </li>
+  <li>
+    Reading and writing from the socket using the <code>read</code>
+    and <code>write</code> system calls (exactly as we did before with
+    files and pipes).
+  </li>
+  <li>
+    Tearing down the socket using the <code>close</code> system call
+    (also the same as what we did previously, with files and pipes).
+  </li>
+</ul>
+
+<h2>Setup</h2>
+<p>
+Pull the <tt>t10</tt> starter code from your git repository.
+</p>
+
+<p>
+  The port on which the server listens is defined in
+  the <tt>Makefile</tt>. We have it set to 40001 by default. However,
+  if more than one person uses the same port on a single machine, you'll
+  have trouble connecting&mdash;our server is only set up to make one
+  connection at a time. So, before doing anything else, you should
+  change the port.
+</p>
+
+<p>
+  To avoid port conflicts, we need everyone to pick a number that is
+  unlikely to conflict with others. So, take the last four digits of
+  your student number and add a 5 in front. For example, if your
+  student number is 998123456, your port would be 53456. Using this
+  base port, you may add 1 to it as necessary in order to use new
+  ports (for example, the fictitious student here could also use
+  53457, 53458, 53459, 53460). Sometimes, when you shut down your
+  server (e.g., to compile and run it again), the OS will not release
+  the old port immediately, so you may have to cycle through ports.
+</p>
+
+<h2>Sending and Receiving Messages</h2>
+
+<p>
+  Open <tt>randclient.c</tt>. It is a client that sends multiple
+  copies of the same message to a server. Each message ends with a
+  <i>network newline</i>: <code>"\r\n"</code>.
+</p>
+
+<p>
+  You might expect that a server using <code>read</code> will receive
+  one complete line of text with each <code>read</code> call. However,
+  this isn't guaranteed to happen. For example, in a busy network
+  or with a slow client, one line of text might be split across
+  multiple TCP segments. A server cannot do a single <code>read</code>
+  and expect to get any sensible unit of communication.
+</p>
+
+<p>
+  To simulate this, <tt>randclient.c</tt> artificially splits up its
+  copies of the messages over multiple <code>write</code> calls.
+  This will cause trouble for any server that expects to read entire
+  messages at a time. <tt>readserver.c</tt> is one such server.
+  Run <kbd>readserver &amp;</kbd> (to run the server in the background)
+  and then run <kbd>randclient 127.0.0.1</kbd>. Notice that the server
+  thinks that every small piece of a message is a complete message,
+  which is incorrect. Your task is to add buffering to your server so
+  that it waits for a complete message (ending with the network newline)
+  before printing the message.
+</p>
+
+<p>
+  Once you're done exploring how <code>readserver</code> works,
+  don't forget to terminate it.
+</p>
+
+<h2>Task 1: A Buffering Server</h2>
+<p>
+  In <tt>bufserver.c</tt>, we have given you the skeleton for a
+  buffering server. The <code>Step</code> comments in the code indicate
+  what you should do to complete the server. The design sketched out in
+  the starter code is one solution to the problem of identifying when a
+  message ends. Other options include sending the length of the message
+  as an <code>int</code> before sending the message itself or using
+  fixed-length messages. (For this lab and the assignment, however,
+  you should use the protocol outlined in the starter.)
+</p>
+
+<p>
+  The main idea of the design we're using this week is that you have a
+  buffer (an array) where you store pieces of a message until you
+  receive a network newline ("\r\n"). Each message piece is appended
+  to the data that you've already placed in the buffer. When you find
+  a network newline, you know that you have a complete message, so you
+  can print that message and then shift any remaining bytes (i.e., any
+  bytes that were received after the network newline) to the front of
+  the buffer as the start of the next message.
+</p>
+
+<p>
+  All of your new code should be in <tt>socket.c</tt>.
+  Once you finish the steps, try running <tt>bufserver</tt> and then
+  run <tt>randclient</tt> to connect to the server. The server should
+  have one line of output per message. If there is extra garbage
+  printed or other errors, carefully go over the steps again&mdash;it's
+  very easy to get off-by-one mistakes here. Another tip is to be
+  careful to note when you are guaranteed to have a null-terminated
+  string in <code>buf</code>, and when you aren't.
+</p>
+
+<h2>Task 2: Using Python to Debug Your Code</h2>
+<p>
+For this part, you are asked to test your server using a simple
+Python client. The main objectives we will achieve by doing this are:
+</p>
+<ul>
+  <li>
+    Better understand that TCP sockets work the same way, regardless
+    of which programming language you use to create them. So it is
+    no problem at all for a C program and Python program to communicate
+    over a TCP connection.
+  </li>
+  <li>
+    More easily test your tutorial (and Assignment 4, which is coming up).
+  </li>
+  <li>
+    Learn to interact with some low-level functionality in Python that
+    interfaces directly with the operating system. While such
+    functionality is limited in Python (especially when compared
+    to C), Python does nevertheless provide wrapper functions to
+    some commonly-used system calls such as <code>socket()</code>
+    and <code>select()</code>, but with some added layers of abstraction
+    (e.g., buffer allocation is automatic) to make it easier to use.
+  </li>
+</ul>
+
+<p>
+  Launch two bash shells: One for the server, and one for the client.
+</p>
+
+<p>
+  <b>In the server window</b>, run <kbd>bufserver</kbd>.
+</p>
+
+<p>
+  Now, <b>in the client window</b>, launch an interactive Python 3.6
+  console by running the <kbd>python3</kbd> command.
+</p>
+
+<p>
+  From the Python console, run the following commands:
+</p>
+
+<pre>
+Python 3.6.9 (default, Nov  7 2019, 10:44:02)
+[GCC 8.3.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> <kbd>import socket</kbd>
+>>> <kbd>s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)</kbd>
+>>> <kbd>s.connect(("localhost",PORT))</kbd> # Replace PORT with your actual port number
+>>> <kbd>s.send(b"123\r\n")</kbd>
+</pre>
+
+<p>
+  In your server, do you see that the message has successfully been
+  received? Now, try sending a sequence of messages to test various
+  corner cases, e.g., a message without a network newline terminator,
+  an excessively long message, etc. Please don't
+  don't post on the forum asking for us to give you an exhaustive list
+  of test cases, or to explain what we mean above (e.g., "what is an
+  excessively long message?"). These guidelines are deliberately vague,
+  and intended to get you to think, be creative, and exercise your
+  skills/abilities to come up with relevant test cases.
+</p>
+
+<p>
+  You are encouraged to brainstorm test cases with your friends. Often
+  when we (the instructors) give suggestions, they are taken at face
+  value without any questioning, and this is detrimental to learning.
+  When brainstorming with friends, critique and question each other's
+  ideas to extract more benefit from your discussions.
+</p>
+
+<p>
+  Please refer to the Python documentation for the
+  <a href="https://docs.python.org/3.6/library/socket.html"> Low-level networking interface</a>.
+</p>
+
+<h2>Task 3: A TCP Client and Server in Python</h2>
+
+<p>
+  In the previous step, we used Python as a TCP client.
+  We may also use Python as a TCP server. Try launching
+  two separate Python consoles: One to act as a server, and one
+  to act as a client.
+</p>
+
+<p>
+  In the client window, try:
+</p>
+
+<pre>
+Python 3.6.9 (default, Nov  7 2019, 10:44:02)
+[GCC 8.3.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> <kbd>import socket</kbd>
+>>> <kbd>s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)</kbd>
+>>> <kbd>s.connect(("localhost",PORT))</kbd> # Replace PORT with your actual port number
+>>> <kbd>s.send(b"abcdefghijklmnop\r\n")</kbd>
+</pre>
+
+<p>
+  In the server window, try:
+</p>
+
+<pre>
+Python 3.6.9 (default, Nov  7 2019, 10:44:02)
+[GCC 8.3.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> <kbd>import socket</kbd>
+>>> <kbd>s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)</kbd>
+>>> <kbd>s.bind(("localhost",PORT))</kbd> # Replace PORT with your actual port number
+>>> <kbd>s.listen(1)</kbd>
+>>> <kbd>s2 = s.accept()</kbd>
+>>> <kbd>s2[0].recv(5)</kbd>
+</pre>
+
+<p>
+  These client-side and server-side methods cannot be called in any arbitrary order.
+  In a text file called
+  <code>socket_functions.txt</code>, list the order in which
+  the following socket functions need to be executed so that there is
+  <strong>no blocking</strong> (i.e., the function must return
+  immediately), and so that
+  <strong>as much as possible, the client-side functions should execute before the server-side functions</strong>:
+  <code>socket()</code>, <code>bind()</code>, <code>listen()</code>
+  <code>accept()</code>, <code>recv()</code>, <code>connect()</code>,
+  <code>send()</code>.
+</p>
+
+<p>
+  Your text file should:
+  <ol>
+    <li>
+      Contain one function per line, spelled out exactly as in the
+      previous paragraph, including parentheses. Any missing or extra
+      characters or lines will likely result in a grade of zero. Note that <code>socket()</code> is called
+      from both the server and client, so it should appear twice in your
+      text file (without any added text to distinguish whether it is being
+      called from the server or client).
+    </li>
+    <li>
+      Have the correct file name, including the extension.
+    </li>
+    <li>
+      Be formatted with UNIX line endings.
+      Use the lab PCs and you won't have to worry about this.
+    </li>
+  </ol>
+</p>
+
+<p>
+  Finally: In the example run above,
+  what argument should you call <code>recv()</code> with from
+  the server, to receive the entire remainder of the message
+  that was sent from the client? What happens if you were to try
+  calling <code>recv()</code> with a number that is greater than
+  the number of bytes that the client has sent? Why does this happen?
+  Do not submit your answer to this question, but discuss it with your
+  TAs and/or classmates to make sure that you understand.
+</p>
+
+<h2>What to Submit</h2>
+<p>
+  Verify that your <tt>socket.c</tt> (which should contain the helper
+  functions that you write, used in <tt>bufserver.c</tt>)
+  and <tt>socket_functions.txt</tt>
+  have been added to your repository, committed, and pushed on time
+  to get credit for the lab.
+</p>
+
+    <section>
+      <div class="page-header">
+        <a name="comments"></a><h2>Comments</h2>
+      </div>
+      <div id="discourse-comments" class="span12">
+        <p>
+          Note: If the comments fail to load, try refreshing the page or
+          <a href="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/tutorials/t10.shtml">
+            logging into the discussion board through this link
+          </a>.
+        </p>
+      </div>
+    </section>
+
+    <!--#include virtual="../footer.html" -->
+  </main><!-- /.container -->
+  <script type="text/javascript">
+    var DiscourseEmbed = {
+      discourseUrl: 'https://mcsapps.utm.utoronto.ca/forum/',
+      topicId: 5510
+    };
+
+    function loadComments() {
+      var d = document.createElement('script'); d.type = 'text/javascript'; d.async = true;
+      d.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(d);
+    }
+
+  </script>
+
+  <!-- Begin Furkan's hack: Using a hidden iframe, automatically
+  log the user into Discourse before attempting
+  to load the comments. This will only work if this page has
+  Shibboleth authentication enabled through the .htaccess file -->
+
+  <iframe src="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/load_comments.html" style="display:none;" width="0" height="0" name="forumlogin"></iframe>
+
+  <script>
+    window.addEventListener("message", function(event) {
+      if (event.origin != "https://mcs.utm.utoronto.ca") {
+        console.log("Ignoring cross-origin message from Discourse SSO iframe: " + event.origin);
+        return;
+      }
+
+      console.log("Received same-origin message from Discourse SSO iframe: loading comments.");
+      loadComments();
+    });
+  </script>
+
+  <!-- End Furkan's hack -->
+
+</body>
+</html>
+

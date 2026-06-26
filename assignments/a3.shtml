@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html>
+<!--#include virtual="../head.shtml" -->
+<body>
+  <!--#include virtual="../navbar.html" -->
+  <script>
+    var p = document.getElementById("menu.assignments");
+    p.className = "nav-item active";
+  </script>
+  <main role="main" class="container">
+  <h1 class="mt-5">Assignment 3: Parallel Computation with Multi-Processing</h1>
+    <!--#set var="DEADLINE" value="10 p.m. on Monday, March 9, 2020 (with only one grace token available)" -->
+    <!--#include virtual="./deadline.shtml" -->
+<p>For this assignment, you will write a multi-process program that takes
+advantage of multiple CPU cores in parallel to solve the
+<a href="https://en.wikipedia.org/wiki/Closest_pair_of_points_problem">Closest Pair of Points Problem</a>.</p>
+<h2 class="mt-5">Background</h2>
+<p>The closest pair of points problem is a computational geometry problem
+that can be solved using a <em>divide and conquer</em> algorithm.</p>
+<p>As a reminder of what a divide-and-conquer algorithm is:</p>
+<blockquote>
+<p>A divide-and-conquer algorithm works by recursively
+breaking down a problem into two or more sub-problems
+of the same or related type, until these become simple
+enough to be solved directly. The solutions to the
+sub-problems are then combined to give a solution
+to the original problem.</p>
+</blockquote>
+<p>Source: <a href="https://en.wikipedia.org/wiki/Divide-and-conquer_algorithm">Wikipedia</a></p>
+<p>A high-level explanation of the problem is explained in this handout.
+A more detailed explanation, which is <strong>required reading</strong>, is available
+<a href="./a3/clrs_closest_points.pdf">in this PDF printout of Section 33.4</a>
+from &quot;Introduction to Algorithms&quot; by Cormen, Leiserson, Rivest, and Stein. (CLRS)</p>
+<p>If you have any questions about the algorithm, to avoid clutter
+and to make the forum topic more useful for everyone, please avoid
+vague questions such as, &quot;I don't understand Step X&quot;.
+Instead, please reference specific elements from the text in the handout
+or provided PDF file and ask a specific question about that text.</p>
+<h3>Did We Get Transferred to CSC236?</h3>
+<p>No, don't worry, this is still CSC209. Divide and conquer algorithms
+are well-suited for parallel computation, which makes this is a good
+opportunity to apply systems-level concepts to solve a real-world
+problem efficiently.</p>
+<p><a href="https://en.wikipedia.org/wiki/Merge_sort">Merge sort</a>
+is a popular divide-and-conquer algorithm that you have all seen in
+CSC148. If you have also taken CSC236, you may have seen other
+examples.</p>
+<h2 class="mt-5">The Closest Pair of Points Problem</h2>
+<p>Given <code>n</code> points on a 2D plane, find the distance between the
+closest pair of points.</p>
+<h3>Naive (Brute-Force) Approach</h3>
+<p>The naive solution can be implemented in just a few lines,
+by finding the distance between all pairs of points
+and returning the distance between the closest pair.
+This approach requires O(n^2) time.</p>
+<h3>Recursive Divide-and-Conquer Approach</h3>
+<p>The problem can be solved in O(nlogn) time using the following
+recursive divide and conquer approach:</p>
+<ol>
+<li>Sort the points in ascending order by their x-coordinates.</li>
+<li>Split the list of points into two equal-sized halves.
+This is like drawing a vertical line through the plane to divide
+the points into a left-hand-side and right-hand-side, each containing
+an equal number of points.</li>
+<li>Solve the problem recursively on the left and right halves.</li>
+<li>Find the distance between the closest pairs of points where one point
+lies on the left-hand-side, and the other point lies on the
+right-hand-side. This can be done in linear time.</li>
+<li>The final answer is the minimum among the:
+<ul>
+<li>Distance between the closest pair of points on the left-hand side.</li>
+<li>Distance between the closest pair of points on the right-hand side.</li>
+<li>Distance between the closest pair of points where one point is on
+the left-hand-side and the other point is on the right-hand side.</li>
+</ul>
+</li>
+</ol>
+<p><img src="./a3/closest_points.png" alt="Illustration of algorithm steps" width="100%"/></p>
+<p>Note: Our implementation in this assignment might not be exactly O(nlogn), as we do not adhere strictly to all the guidelines outlined in the CLRS text.</p>
+<h2 class="mt-5">Assignment Structure</h2>
+<p>First, let us go over the files provided in starter code:</p>
+<ul>
+<li><code>Makefile</code>, which you will notice contains a new flag,
+<code>-fsanitize=signed-integer-overflow</code>, as well as the <code>-lm</code> flag required for the <code>math</code> library.</li>
+<li><code>main.c</code> contains the logic to:
+<ol>
+<li>Parse command-line arguments</li>
+<li>Either generate points or read them from a file</li>
+<li>Optionally save generated points to a file</li>
+<li>Sort the points with <code>qsort()</code></li>
+<li>Call both the single-process and  multi-process implementations
+to find the distance between the closest pair of points</li>
+<li>Measure the time it takes for both the single-process
+and multi-process implementations</li>
+</ol>
+</li>
+<li><code>closest_tests.c</code> contains a test case
+to test the correctness of your implementation. You may use this as
+a skeleton to add additional test cases.</li>
+<li><code>closest_helpers.h</code>, <code>closest_brute.h</code>, <code>closest_serial.h</code>, and
+<code>closest_parallel.h</code> declare all the functions that you will implement.</li>
+<li><code>closest_helpers.c</code>, <code>closest_brute.c</code>, <code>closest_serial.c</code>, and
+<code>closest_parallel.c</code> are where your implementation will go.</li>
+</ul>
+<p>Your implementation (i.e., <code>closest*.c</code>)
+MUST work with the original <code>Makefile</code>, <code>main.c</code>,
+and <code>closest*.h</code> files supplied in your starter code (Note:
+If you don't understand what the <code>*</code> means: <code>man 7 glob</code>).
+If you do modify them for testing purposes, be sure to revert back
+to the original versions using <code>git checkout COMMIT_ID FILENAME</code>
+when running your final set of tests (check <code>git log</code> to find the
+commit ID of the starter code).</p>
+<p>The <code>closest_tests.c</code> file is supplied only for your convenience, so
+you may modify it as you see fit. It will not be marked.</p>
+<h3>Program Output</h3>
+<p>Your implementation should not print <strong>ANYTHING</strong> to <code>stdout</code>.
+The only data printed to <code>stdout</code> should be from the <code>printf()</code>
+statements supplied in <code>main.c</code>.</p>
+<p>Any other information that you print for debugging purposes should be
+printed to <code>stderr</code> if your program is run in <em>verbose</em>  mode (explained below).
+If the program is not in verbose mode, no output should be printed except
+for error messages before the program exits.</p>
+<h3>Global Variables</h3>
+<p>Notice that the header files declare two global variables:</p>
+<ol>
+<li><code>curr_depth</code> will help you keep track of your number of processes.</li>
+<li><code>verbose</code> is a boolean value, toggled using the <code>-v</code> command-line
+argument.</li>
+</ol>
+<p>In verbose mode, any of your functions may print any additional
+debugging information of your choosing to <code>stderr</code>. We will not be
+testing your program in verbose mode.</p>
+<h3>Naive (Brute-Force) Implementation</h3>
+<p>First, you must implement the naive algorithm, which requires
+that you implement:</p>
+<ol>
+<li><code>double dist(struct Point, struct Point);</code> (in <code>closest_helpers.c</code>)</li>
+<li><code>double brute_force(struct Point P[], size_t n);</code> (in <code>closest_brute.c</code>)</li>
+</ol>
+<p>Implementing the naive approach is a requirement for implementing
+the recursive approach described below. Specifically, the
+naive approach is used for solving the simplest instance (base case)
+of the problem, where only 2 or 3 points are given as input.</p>
+<p>You may test your naive implementation in <code>closest_tests.c</code>.</p>
+<h3>Single-Process Implementation</h3>
+<p>Next, you must implement the single-process divide-and-conquer
+solution.</p>
+<p>Your single-process implementation requires that you implement:</p>
+<ol>
+<li>The naive solution, as described above.</li>
+<li><code>int compare_x(const void*, const void*);</code> (in <code>closest_helpers.c</code>)</li>
+<li><code>int compare_y(const void*, const void*);</code> (in <code>closest_helpers.c</code>)</li>
+<li><code>double combine_lr(struct Point P[], size_t size, double d);</code> (in <code>closest_serial.c</code>)</li>
+<li><code>double _closest_serial(struct Point P[], size_t n);</code> (in <code>closest_serial.c</code>)</li>
+<li><code>double closest_serial(struct Point P[], size_t n);</code> (in <code>closest_serial.c</code>)</li>
+</ol>
+<p>All functions above will be re-used when completing the next part
+of your assignment, which is to write your multi-process solution.</p>
+<h3>Multi-Process Implementation</h3>
+<p>Your multi-process implementation requires that you implement:</p>
+<ol>
+<li>The naive solution and single-process recursive solution, as
+described above.</li>
+<li><code>double _closest_parallel(struct Point P[], size_t n, int pdmax, int *pcount);</code> (in <code>closest_parallel.c</code>)</li>
+<li><code>double closest_parallel(struct Point P[], size_T n, int pdmax, int *pcount);</code> (in <code>closest_parallel.c</code>)</li>
+</ol>
+<h2 class="mt-5">Implementation Requirements</h2>
+<h3>Naive Solution</h3>
+<p>There are no special requirements for the naive solution, aside
+from the correct implementation of the algorithm.</p>
+<h3>Single-Process Recursive Solution</h3>
+<p>Implement the algorithm as described earlier in this handout, under the
+&quot;The Recursive Divide-and-Conquer Approach&quot; section.</p>
+<p>We will check for compliance with <em>ALL</em> the following requirements.
+No credit will be given to submissions that violate these requirements
+(e.g., not using <code>qsort()</code>, or implementing the naive solution instead
+of the divide-and-conquer solution).</p>
+<p>The <code>closest_serial()</code> function should first sort the points, using
+<code>qsort()</code>, in ascending order by their x-coordinates. It should then
+call <code>_closest_serial()</code>.</p>
+<p>The <code>_closest_serial()</code> function should:</p>
+<ol>
+<li>Find the middle point, <code>p_mid</code>, by x-coordinate. This is easy
+since the points should already be sorted by x-coordinate.</li>
+<li>Split the array of points into two equal-sized halves. The left
+half should consist of the first <code>floor(n/2)</code> elements of the array (i.e.,
+if <code>n</code> is odd, the right half will consist of one more point).</li>
+<li>Solve the problem on the left and right halves:
+<ul>
+<li>If one or both of the halves consist of 3 points or fewer,
+call <code>brute_force()</code> to find the solution. This is the &quot;stop
+condition&quot; of your recursive function.</li>
+<li>Otherwise, make two recursive calls to <code>_closest_serial()</code> (for
+the left half and the right half).</li>
+</ul>
+</li>
+<li>Let <code>dl</code> be the distance between the closest pair of points on the
+left-hand side, and <code>dr</code> be the distance between the closest pair of
+points on the right-hand side. Let <code>d</code> be the minimum among
+<code>dl</code> and <code>dr</code>.</li>
+<li>Find the distance between the closest pairs of points where one point
+lies on the left-hand-side and the other point lies on the
+right-hand-side. Do this by calling <code>combine_lr()</code>, passing in
+the array of <code>n</code> points, along with <code>d</code> and <code>p_mid</code>. This function
+implements the following linear-time solution:
+<ol type="i">
+<li>Build an array consisting of points where for each point <code>p_i</code>,
+<code>abs(p_i.x - p_mid.x) &lt; d</code>.</li>
+<li>Sort the points with <code>qsort()</code> by their y-coordinate.
+<ul>
+<li>There is a more efficient solution, explained towards the end
+of the PDF handout, where this step can be avoided. But we are
+skipping that optimization for simplicity.</li>
+</ul>
+</li>
+<li>For each point in the array <code>p_i</code>,
+find the distance between it and each subsequent point <code>p_j</code>
+where <code>p_j.y - p_i.y &lt; d</code>.
+<ul>
+<li>Although this is implemented with a nested loop, and thus
+appears to be an O(n^2) solution at first glance, it is actually
+a linear-time solution, since it is proven that, for each point, the
+distance only needs to be computed for (at most)
+the next 7 points in the list that is sorted by y-coordinate.
+(See the CLRS pdf for details.)</li>
+</ul>
+</li>
+<li>Return the smaller of <code>d</code> or the smallest distance found
+in the previous step.</li>
+</ol>
+</li>
+<li>The final answer is the minimum among the:
+<ul>
+<li>Distance between the closest pair of points on the left-hand side, <code>dl</code>.</li>
+<li>Distance between the closest pair of points on the right-hand side, <code>dr</code>.</li>
+<li>Distance between the closest pair of points where one point is on
+the left-hand-side and the other point is on the right-hand side.</li>
+</ul>
+</li>
+</ol>
+<h3>Multi-Process Recursive Solution</h3>
+<p>We will check for compliance with <em>ALL</em> the following requirements.
+No credit will be given to submissions that violate these requirements
+(e.g., implementing a single-process solution, or not using pipes to
+communicate between processes).</p>
+<p>The <code>closest_parallel()</code> function should first sort the points, using
+<code>qsort()</code>, in ascending order by their x-coordinates. It should then
+call <code>_closest_parallel()</code>.</p>
+<p>The following logic specifies the requirements for the <strong>creation of</strong>
+and the <strong>co-ordination between</strong> the worker processes by
+<code>_closest_parallel()</code>:</p>
+<ol>
+<li>Let <code>pdmax = pdepth</code>, where <code>pdepth</code> is the maximum depth of the
+process tree, specified by the argument of the command-line option <code>-d</code>.</li>
+<li>If <code>n &lt; 4</code>, or <code>pdmax == 0</code>, invoke <code>_closest_serial()</code> to obtain
+the answer without creating any child processes. This is the stop
+condition for the recursive function <code>_closest_parallel()</code>.
+<ul>
+<li>Note: When making the recursive call, you must set the appropriate
+value for <code>pdmax</code> to ensure that the stop condition is reached and
+that the corret number of processes is created.</li>
+</ul>
+</li>
+<li>Otherwise, split the array of points into two equal-sized halves.
+The left half should consist of elements <code>0</code> to <code> floor(n/2)</code>
+(i.e., if <code>n</code> is odd, the right half will consist of one more point).</li>
+<li>Create two child processes to solve the left half and right half
+of the problem:
+<ol type="a">
+<li>Create a pipe, which the first child process will use to
+communicate with its parent (i.e., the current process).
+b. Fork a child, which will:</li>
+<ol type="i">
+<li>Invoke <code>_closest_parallel()</code> on the left half of the array
+(elements <code>0</code> to <code>floor(n/2)</code>), to obtain the distance between
+the closest pair of points on the left-hand side.</li>
+<li>Send the return value (i.e., distance between the closest pair
+of points) back to the parent process by writing it to the pipe.</li>
+<li>Exit with the appropriate status (consult text below the process tree diagram).</li>
+</ol>
+<li>Create a pipe, which the second child process will use to
+communicate with its parent (i.e., the current process).</li>
+<li>Fork a second child, which will:</li>
+<ol type="i">
+<li>Invoke <code>_closest_parallel()</code> on the right half of the array
+(elements <code>floor(n/2)+1</code> to <code>n</code>), to obtain the distance between
+the closest pair of points on the right-hand side.</li>
+<li>Send the return value (i.e., distance between the closest pair
+of points) back to the parent process by writing it to the pipe.</li>
+<li>Exit with the appropriate status (consult text below the process tree diagram).</li>
+</ol>
+<li>Wait for both child processes to complete (each process should have
+only two child processes).</li>
+<li>Read from the two pipes to retrieve the results from the two child
+processes.</li>
+<li>Follow the step 5 from the single-process recursive solution to
+determine the distance between the closest pair of points, with
+distance is smaller than <code>d</code>, where one
+point is in the left half of the array and one point is in the right
+half of the array,</li>
+<li>The final answer is the minimum among the:
+<ul>
+<li>Distance between the closest pair of points on the left-hand side,
+found by the first child process.</li>
+<li>Distance between the closest pair of points on the right-hand side,
+found by the second child process.</li>
+<li>Distance between the closest pair of points where one point is on
+the left-hand-side and the other point is on the right-hand side.</li>
+</ul>
+</li>
+</ol>
+<p>Let <code>current_depth</code> be the depth of the current process in the process
+tree. The parent process is at depth 0. The first two children have
+depth 1, and so on.</p>
+<p><img src="./a3/process_tree.svg" alt="Illustration of process tree depth" width="90%"/></p>
+<p>Each child process in your program should terminate with an exit
+status equal to:</p>
+<ul>
+<li>the number of descendent (i.e., child, grandchild...) processes
+that the terminating process forked; or</li>
+<li><code>1</code>, in case of an unrecoverable error (e.g., a failed system
+call, or if a child process terminated with exit status <code>1</code>).</li>
+</ul>
+<p>A <code>static</code> variable is defined for you in <code>_closest_parallel()</code>: You
+will need it for keeping count of the number of descendent processes
+that were forked.
+<a href="https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Storage-Class-Specifiers">See the GNU C Reference Manual for more on static variables</a>.</p>
+<p>The parent process should <code>exit(0)</code> upon success, or <code>exit(1)</code> upon
+failure (but this is already done in <code>main.c</code>).</p>
+<h2 class="mt-5">Benchmarking your Implementation's Performance</h2>
+<p>Is there a point at which adding more processes starts to hurt
+performance? Why do you think that is the case? You do not have to
+submit your answer to this question, but it is an educational experiment
+and useful thought exercise.</p>
+<h2 class="mt-5">Debugging Tips</h2>
+<p>Debugging multi-process programs can be difficult.
+Here are some useful tips for how to do so:</p>
+<ol>
+<li>It is possible to debug a multi-process program with <code>gdb</code>, using either of
+<a href="http://sourceware.org/gdb/current/onlinedocs/gdb/Forks.html#Forks">two techniques described in the GDB manual</a>.
+If you use the <code>sleep()</code> technique, it may be more convenient to do it only with
+the <code>-v</code> flag enabled (so that you can still test your program normally
+when running without the <code>-v</code> flag).</li>
+<li>The <code>strace</code> and <code>ltrace</code> tools will prove invaluable. These tools trace
+your program's execution and print out every system call or library call
+(respectively) that your program makes. There are some common
+errors that most of you will likely encounter, which are easily detectable
+using these tools. For example, your program may stall indefinitely due to
+a parent process invoking <code>read()</code> on an empty pipe that the child process
+has not closed.</li>
+<li>Two of your TAs have built a tool that works similarly to <code>strace</code> and
+<code>ltrace</code>, but produces an interactive diagram that is easier to read. They
+will share more details on how to obtain and use this tool on the discussion
+board.</li>
+<li>You may find the <code>assert()</code> function helpful (see <code>man 3 assert</code> for
+details). You may invoke <code>assert()</code> throughout your code to
+identify cases where your variables hold unintended values. This is often
+a more convenient alternative to using <code>printf()</code> to print the contents
+of all your variables throughout your code.</li>
+</ol>
+<h3>Data Types</h3>
+<p>Finally, remember that this is systems programming, which means you
+must properly handle many corner cases. Ensure that you deal correctly
+with all data types, e.g., by paying attention to the range of valid
+values that each type can hold.</p>
+<p>For example, see what the <a href="https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#The-sizeof-Operator">GNU C Reference Manual says</a>
+about the <code>size_t</code> type:</p>
+<blockquote>
+<p>The <code>size_t</code> type is often a convenient type for a loop index,
+since it is guaranteed to be able to hold the number of elements
+in any array; this is not the case with int, for example.</p>
+</blockquote>
+<p>You may also check the
+<a href="https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Primitive-Types">maximum and minimum values for various types</a>
+and return values through macros defined in different header files.
+For example, use macros defined in <code>limits.h</code> for finding
+<a href="https://www.gnu.org/software/libc/manual/html_node/Range-of-Type.html#Range-of-Type">minimum and maximum values of integer types</a>,
+macros defined in <code>float.h</code> for finding
+<a href="https://www.gnu.org/software/libc/manual/html_node/Floating-Point-Parameters.html">minimum and maximum values of floating-point types</a>,
+or macros defined in <code>stdlib.h</code> for finding
+<a href="https://www.gnu.org/software/libc/manual/html_node/ISO-Random.html#ISO-Random">the maximum value of randomly-generated integers</a>.
+You may observe that some of these macros are already used in
+the <code>main.c</code> starter code.</p>
+<p>Notice also that the program generates integer values for the
+x- and y-coordinates of the points, but calculates distance
+as floating-point values.</p>
+<h2 class="mt-5">What to Submit</h2>
+<p>Submit <code>closest_helpers.c</code>, <code>closest_brute.c</code>, <code>closest_serial.c</code>, and <code>closest_parallel.c</code>.</p>
+
+    <section>
+      <div class="page-header">
+        <a name="comments"></a><h2 class="mt-5">Comments</h2>
+      </div>
+      <div id="discourse-comments" class="span12">
+        <p>
+          Note: If the comments fail to load, try refreshing the page or
+          <a href="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/assignments/a3.shtml">
+            logging into the discussion board through this link
+          </a>.
+        </p>
+      </div> 
+    </section>
+
+<!--#include virtual="../footer.html" -->
+  </main><!-- /.container -->
+  <script type="text/javascript">
+    var DiscourseEmbed = {
+      discourseUrl: 'https://mcsapps.utm.utoronto.ca/forum/',
+      topicId: 5130
+    };
+
+    function loadComments() {
+      var d = document.createElement('script'); d.type = 'text/javascript'; d.async = true;
+      d.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(d);
+    }
+
+  </script>
+
+  <!-- Begin Furkan's hack: Using a hidden iframe, automatically
+  log the user into Discourse before attempting
+  to load the comments. This will only work if this page has
+  Shibboleth authentication enabled through the .htaccess file -->
+
+  <iframe src="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/load_comments.html" style="display:none;" width="0" height="0" name="forumlogin"></iframe>
+
+  <script>
+    window.addEventListener("message", function(event) {
+      if (event.origin != "https://mcs.utm.utoronto.ca") {
+        console.log("Ignoring cross-origin message from Discourse SSO iframe: " + event.origin);
+        return;
+      }
+
+      console.log("Received same-origin message from Discourse SSO iframe: loading comments.");
+      loadComments();
+    });
+  </script>
+
+  <!-- End Furkan's hack -->
+  </body>
+</html>
+

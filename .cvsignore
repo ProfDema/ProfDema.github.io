@@ -1,0 +1,5 @@
+*.py
+*.pyc
+*priv*
+update_www.sh
+.209_web_root

@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html>
+<!--#include virtual="../head.shtml" -->
+<body>
+  <!--#include virtual="../navbar.html" -->
+  <script>var p = document.getElementById("menu.assignments"); p.className = "nav-item active";</script>
+  <main role="main" class="container">
+    <h1 class="mt-5">Assignment 1: Standard Input/Output and Memory Allocation</h1>
+    <!--#set var="DEADLINE" value="10 p.m. on Monday, January 27, 2020" -->
+    <!--#include virtual="./deadline.shtml" -->
+		
+<h2>Introduction</h2>
+
+<p>
+    For this assignment, you'll write a C program that manipulates 
+    sounds by adding sound effects to them. Namely, the effects you 
+    will create are listed here:
+</p>
+
+<ul>
+  <li><code>fade_in</code> simulates the effect of a sound approaching from a distance to the observer.</li>
+  <li><code>fade_out</code> simulates the effect of a sound moving away from the observer</li>
+  <li><code>pan</code> simulates the effect of a sound panning from the left to the right of the observer</li>
+</ul>
+
+<p>
+    Completing this assignment will require you to use command-line 
+    options, standard I/O, string functions, and memory allocation in C.
+    You will also use piping and output redirection in the Bash shell.
+</p>
+
+<p>
+    Sounds are waves of air pressure. When a sound is generated, a 
+    sound wave consisting of compressions (increases in pressure) 
+    and rarefactions (decreases in pressure) moves through the air. 
+    This is similar to what happens if you throw a stone into a pond: 
+    the water rises and falls in a repeating wave.
+</p>
+
+<p>
+    When a microphone records sound, it takes a measure of the air 
+    pressure and returns it as a value. These values are called 
+    samples and can be positive or negative corresponding to increases 
+    or decreases in air pressure. Each time the air pressure is 
+    recorded, we are <b>sampling</b> the sound. Each sample records 
+    the sound at an instant in time; the faster we sample, the more 
+    accurate is our representation of the sound. The 
+    <b>sampling rate</b> refers to how many times per second 
+    we sample the sound. For example, CD-quality sound uses a 
+    sampling rate of 44100 samples per second; sampling someone's 
+    voice for use in a VOIP conversation uses far less than this. 
+    Sampling rates of 11025 (voice quality), 22050, and 44100 
+    (CD quality) are common.
+</p>
+
+<p>
+    For mono sounds (those with one sound channel), a sample is 
+    simply a positive or negative integer that represents the 
+    amount of compression in the air at the point the sample 
+    was taken. For stereo sounds, a sample is actually made up 
+    of two integer values: one for the left speaker and one for 
+    the right.
+</p>
+
+<p>
+    A WAV file contains a header of 44 bytes that contains data 
+    about the sampling rate, total number of sound samples,
+    and a few other pieces of information:
+</p>
+
+<pre>
+// Define WAV file format header
+
+    char riff[4];     // "RIFF", 4 bytes
+    int total_size;   // Total Size, 4 bytes
+    char fmt[8];      // "WAVEfmt", 8 bytes
+    int fmt_size;     // fmt chunk size, 4 bytes
+    short format;     // type of format, 2 bytes
+    short channel;    // channel, 2 bytes
+    int rate;         // sampling rate, 4 bytes
+    int avgbyte;      // rate * block, 4 bytes
+    short block;      // channels * bit / 8, 2 bytes
+    short bit;        // bits, 2  bytes
+    char data[ 4 ];   // = "data", 4 bytes
+    int data_size;    // data size, 4 bytes 
+ 
+</pre>
+
+<p>
+    See <a href="http://www.topherlee.com/software/pcm-tut-wavformat.html">this page</a>
+    for a more detailed explanation of the values contained in the
+    WAV header.
+</p>
+
+<p>
+    The remainder of the WAV file contains a
+    contiguous sequence of <code>int</code> values, each representing
+    a sound sample.
+</p>
+
+<p>
+    For example, the provided WAV file <code>crow.wav</code> has 
+    a <code>data_size</code> of 60416 bytes (you can tell also by looking 
+    at the file size and subtracting 44 bytes of the header) 
+    and a <code>rate</code> of 22050.
+</p>
+
+<p>We can glimpse at this file as follows:</p>
+
+<pre>
+$ xxd -g1 crow.wav | head
+00000000: 52 49 46 46 24 ec 00 00 57 41 56 45 66 6d 74 20  RIFF$...WAVEfmt 
+00000010: 10 00 00 00 01 00 01 00 22 56 00 00 44 ac 00 00  ........"V..D...
+00000020: 02 00 10 00 64 61 74 61 00 ec 00 00 b9 ff ba ff  ....data........
+00000030: b9 ff af ff b3 ff c9 ff f7 ff 5c 00 6a 00 43 00  ..........\.j.C.
+00000040: 37 00 42 00 24 00 1b 00 e2 ff 9f ff 96 ff bf ff  7.B.$...........
+00000050: c6 ff d9 ff eb ff d0 ff d5 ff f4 ff 11 00 33 00  ..............3.
+00000060: 6e 00 a7 00 cc 00 09 01 01 01 91 00 9e ff 65 fe  n.............e.
+00000070: 3b fe 61 fe 3f fe 5e fe 7a fe fc fe d1 ff d3 00  ;.a.?.^.z.......
+00000080: c5 01 62 02 b7 02 69 02 23 02 38 02 25 02 36 02  ..b...i.#.8.%.6.
+00000090: 26 02 4a 01 71 ff 75 fb ec f2 94 f6 58 fe 5e 01  &.J.q.u.....X.^.
+</pre>
+
+<p>
+    We see, for example, the number at <em>offset</em>
+    <code>0x28</code> (i.e., at the 40th byte in the file)
+    is <code>0x00ec0000</code>. According the 
+    data description given above, at this location one finds 
+    <code>data_size</code>. Data size is an integer, 
+    which occupies 4 bytes, and it is written in 
+    <em>little-endian</em> which means that the real 
+    data size is <code>0x0000ec00</code> or, converted to a 
+    decimal number, 64016, as expected.
+</p>
+
+<p>
+    Note: Briefly, endianness dictates the order in which the bytes 
+    of a multi-byte number are stored in memory. For example,
+    the number <code>168496141</code> would be printed as
+    <code>0x0a0b0c0d</code> in big-endian (i.e., most significant
+    byte first), or <code>0x0d0c0b0a</code> in little-endian 
+    (i.e., least significant byte first).
+</p>
+
+<p>
+    The first measured sound sample is at offset 
+    <code>0x2c</code>, and is also in little-endian, so the actual 
+    sample value is <code>0xffb9</code>, converted to decimal, that would be <code>-71</code>. A basic manipulation 
+    of sound samples, would consist of increasing or decreasing 
+    (scaling) the volume.
+</p>
+
+<p>
+    Here is how volume scaling works: multiplying each 
+    sample value by a number greater than 1 increases 
+    the volume; multiplying each sample by a number between 
+    0 and 1 (exclusive) decreases the volume. For example, 
+    multiplying everything by 2 doubles the volume; multiplying 
+    everything by 0.5 halves the volume.
+</p>
+
+<h2>Reading the data in your program.</h2>
+
+<p>
+    We will first pipe a hex dump of the WAV file (generated with
+    the <code>xxd</code> program) to your program, which will
+    process the data and output it to <code>stdout</code>, which
+    will once more be piped to the <code>xxd</code> program to
+    revert the hex dump back into a binary file and output the
+    result into a WAV file as follows:
+</p>
+
+<pre>
+xxd -g1 file1.wav | ./effects -param value | xxd -r >file2.wav
+</pre> 
+
+<p>
+    You may look up the usage instructions for <code>xxd</code> 
+    by checking <kbd>man xxd</kbd> or reading the online instructions
+    <a href="https://linux.die.net/man/1/xxd" target="_blank">here</a>.
+</p>
+
+<p>
+    Your code must read the input in hex format from <code>stdin</code>,
+    using <code>scanf</code>, and it must write the processed output 
+    in hex format imitating precisely the output of <code>xxd</code>. 
+    For example, consider the first recorded sample in the data above. 
+    It reads <code>b9 ff</code>. Its decimal value (as a <code>short</code> value is 
+    <code>-71</code> (hint: keep in mind endianness!). Increasing the volume twice, 
+    means simply doubling this number, namely <code>-71*2=-142</code>. Next, we need to convert it to hexadecimal, and reverse the order of bytes due to little-endianness. 
+    The value your program should output for this sample is 
+    <code>72 ff</code>.
+</p>
+
+<h2>Fade-in and Fade-out</h2>
+
+<p></p>
+
+<h3>Fade-in</h3>
+
+<p>
+    Before we discuss how to accomplish fade-in, let's get 
+    acquainted with some fading-in. Listen to this 
+    <a href="./a1/water.wav">monotonous sound of water bubbling</a>. 
+    The volume is stable throughout. Now, running the following 
+    command:
+</p>
+
+<pre>
+xxd -g1 water.wav | ./effects -fin 2000 | xxd -r > water_shortfade.wav
+</pre>
+
+<p>
+    should produce the WAV file 
+    <a href="./a1/water_shortfade.wav">water with a short fade-in</a>. 
+    Notice how the water linearly fades in over the first 
+    two seconds, then remains at maximum volume throughout. 
+    (2000 milliseconds corresponds to two seconds, or 88200 samples, 
+    because we're using sounds recorded at 44100 samples per second.)
+</p>
+
+<p>
+    How many milliseconds should we call <code>fade_in</code> with, 
+    in order to get 
+    <a href="./a1/water_longfade.wav">water with a long fade-in</a>, 
+    basically for the full length of the recording? The fade-in is 
+    slowly and linearly applied over the entire duration of the sound, 
+    so that the maximum volume is reached only at the very last sample.
+</p>
+
+<p>
+    To apply a fade-in to a sound, we multiply successive samples 
+    by larger and larger fractional numbers between 0 and 1. 
+    Multiplying samples by 0 silences them, and multiplying by 
+    1 (obviously) keeps them the same. Importantly, multiplying 
+    by a factor between 0 and 1 scales their volume by that factor.
+</p>
+
+<p>
+    Here's an example. Assume we would like to apply fade-in over 
+    the first four milliseconds. Assuming the sampling rate is 1000
+    samples/sec. We then need to look at the first 4 samples
+    (0.004 seconds * 1000 samples/second = 4 samples), 
+    numbered 0 to 3 in the table below for illustrative purposes. 
+    Both channels of these samples should be multiplied by the 
+    following factors to generate the fade-in:
+</p>
+
+<table width="100%" border="1" cellpadding="2" cellspacing="0"
+       summary="Example fade-in.">
+<tr>
+<th>Sample Number</th>
+<th>Multiply By...</th>
+</tr>
+<tr><td>0</td> <td>0.0</td></tr>
+<tr><td>1</td> <td>0.25</td></tr>
+<tr><td>2</td> <td>0.5</td></tr>
+<tr><td>3</td> <td>0.75</td></tr>
+<tr><td>&gt;3</td> <td>1 (unchanged)</td></tr>
+</table>
+
+<p></p>
+
+<p>
+    Note that this example uses small numbers for the purpose of
+    easy illustration&mdash;it is unlikely that you could hear
+    any difference between the original file and the edited
+    version with a 4-millisecond fade-in.
+</p>
+
+<h3>Fade-out</h3>
+
+<pre>
+xxd -g1 rain.wav | ./effects -fout 2000 | xxd -r > rain_shortfade.wav
+</pre>
+
+<p>
+    This time, the fade is a fade-out (from loud to quiet), and 
+    the fade-out begins <code>fade_length</code> milliseconds from 
+    the end of the sound rather than from the beginning.
+</p> 
+
+<p>
+    Let's use a <a href="./a1/rain.wav">raining sound</a> to demonstrate. 
+    As with the water bubbling above, The volume is stable throughout. 
+    Now, running the code above, we get 
+    <a href="./a1/rain_shortfade.wav">rain with a short fade-out</a>. 
+    The first few seconds of the rain are as before. Then, two 
+    seconds before the end, the fade-out starts, with the sound 
+    progressing toward zero volume. The final sample of the sound 
+    has value 0.
+</p>
+
+<p>
+    The multiplicative factors for <code>fade out</code> are the 
+    same as for <code>fade in</code>, but are applied in the 
+    reverse order. For example, if <code>fade_length</code> were 4
+    milliseconds, we would need to transform both the left and
+    right channels of the last 4 samples
+    (0.004 seconds * 1000 samples/sec = 4 samples)
+    by multiplying them by 0.75, 0.5, 0.25, and 0, respectively.
+    (Again, it is unlikely that you would be able to hear
+    the difference with a 4ms fade-out time.)
+</p>
+
+<h2>Panning from Left to Right</h2>
+
+<pre>
+xxd -g1 small2chan.wav | ./effects -pan 4 | xxd -r > small_pan.wav
+</pre>
+
+<p>
+    This function takes a sound object and an integer indicating 
+    the number of milliseconds to which the pan will be applied.
+    The files used above are <a href="./a1/small2chan.wav">here</a> and <a href="./a1/small_pan.wav">here</a>.
+</p>
+
+<p>
+    Let's listen to what panning sounds like. Here's an 
+    <a href="./a1/airplane.wav">airplane sound</a>. The entire 
+    sound is centred, and does not move in the stereo field 
+    as you listen. Now, running the code above, we get this 
+    <a href="./a1/airplane_pan.wav">airplane panning from left to right sound</a>. 
+    The sound starts completely at the left, then slowly moves to the 
+    right, reaching the extreme right by the final sample.
+</p>
+
+<p>
+    Getting a sound to move from left to right like this requires 
+    a fade-out on the left channel and a fade-in on the right channel.
+</p>
+ 
+<p>
+    Here's an example. Assume we want to achieve pan in 4 milliseconds.
+    This would require us to transform the first four samples 
+    (0.004 seconds * 1000 samples/sec = 4 samplse) of
+    both the left and right channels.
+    The following table indicates the factors by which the 
+    channels of these samples should be multiplied:
+</p>
+
+<table width="100%" border="1" cellpadding="2" cellspacing="0"
+       summary="Example pan.">
+<tr>
+<th>Sample Number</th>
+<th>Multiply Left Channel By...</th>
+<th>Multiply Right Channel By...</th>
+</tr>
+<tr><td>0</td> <td>0.75</td> <td>0</td></tr>
+<tr><td>1</td> <td>0.5</td> <td>0.25</td></tr>
+<tr><td>2</td> <td>0.25</td> <td>0.5</td> </tr>
+<tr><td>3</td> <td>0</td> <td>0.75</td> </tr>
+<tr><td>&gt;3</td> <td>0</td> <td>1 (unchanged)</td> </tr>
+</table>
+
+<p>
+    To understand how this function works, it might help 
+    to think of changing the volume using two volume controls: 
+    one for the left channel and one for the right. To make 
+    the sound seem like it's moving from left to right, you 
+    slowly lower the volume in the left ear and raise the volume 
+    in the right ear. There is no copying going on between the 
+    two channels. And for the record, this technique only works 
+    when corresponding samples of both channels are the same: 
+    experiment with this <a href="./a1/doglake.wav">dog and lake sound</a> 
+    to see what happens when channels contain different sounds.
+</p>
+
+
+<h2>Comparing Binary Files</h2>
+
+<p>
+    For full marks, the WAV files created by your programs must 
+    match our sample WAV files exactly. WAV files are binary files, 
+    and a useful Unix utility for comparing binary files is 
+    <code>cmp</code>. Read the man page for <code>cmp</code>, 
+    especially its <code>-l</code> option. This can tell you 
+    whether two files differ and, if they do, the bytes in the 
+    files that do not match. Note that <code>cmp -l</code> 
+    outputs byte offsets in decimal but byte values themselves 
+    in octal (find a converter online if you do not know how 
+    to convert from octal to decimal).
+</p>
+
+<h2>No Crashes</h2>
+
+<p>
+    Your programs should never segfault, crash, or exhibit any
+    undefined behaviour, e.g.,:
+</p>
+<ul>
+    <li>
+      Make sure the user calls your programs correctly; if not, 
+      print an error message exactly as below 
+      (you may optionally print more detailed information
+      about the error after the following line) and exit:
+      <br>
+      <code>printf("Error: Invalid command-line arguments.\n");</code>
+      <br>
+      On the other hand, if your program encounters an error when
+      processing input (e.g., incorrectly formatted input), or 
+      when generating output, print an error message as follows
+      (again, you may optionally print more detailed information
+      after the following print statement) and exit:
+      <br>
+      <code>printf("Error processing WAV file.\n");</code>
+      <br>
+      In summary, do not make <strong>any</strong> assumptions
+      about the correctness of the input that your program is given.
+      Your program should <strong>never</strong> crash,
+      regardless of any incorrect arguments or input data.
+      Instead, it should always terminate 
+      <strong>gracefully</strong> by printing one of the error
+      messages above and exiting (i.e., termination by
+      a segmentation fault or by printing garbage/undefined values
+      is not considered graceful).
+    </li>
+    <li>Examples:
+    <pre>
+    $ ./effects
+    Error: Invalid command-line arguments.
+    Usage: ./effects -fin fade_in_length|-fout fade_out_length|-pan pan_length
+
+    $ ./effects -wrongparam 100
+    Error: Invalid command-line arguments.
+    The first argument (the required effect) is incorrect.
+    We got: -wrongparam instead of one of the following: -fin, -fout, -pan
+
+    $ ./effects -wrongparam
+    Error: Invalid command-line arguments.
+    Usage: ./effects -fin fade_in_length|-fout fade_out_length|-pan pan_length
+    </pre>
+    </li>
+    <li>Your program does not need to validate that it is working
+    with a correctly-formatted WAV file, and you may assume that
+    we will only validate the output of your program for valid WAV files.
+    However, we may still test your program with invalid WAV files
+    only to check that it does not not crash/segfault or exhibit 
+    any other bad behaviour (e.g., stuck in infinite loop).</li>
+    <li>For full marks, your program should not result in any 
+    errors when running under <code>valgrind</code>.</li>
+</ul>
+
+<h2>Using the Makefile</h2>
+
+<p>
+  Your program <strong>MUST</strong> compile and run using the given
+  Makefile in your <code>a1</code> directory. The Makefile will automatically
+  run <code>gcc</code> with the required flags, including
+  <code>-fsanitize=address</code>, which adds additional checks to
+  your code to detect errors such as buffer overflow. The Makefile also
+  includes a basic "sanity check" that tests your code with a simple
+  test case to ensure that it will at least pass one test. To compile your
+  program using the Makefile, simply run the command <kbd>make</kbd>
+  while inside your <code>a1</code> directory, and it will automatically
+  compile your program and run the sanity check.
+</p>
+
+<h2>A small wav file for testing</h2>
+<p>
+    We have prepared a very small file where you can actually test fade in, fade out using only a few milliseconds, say anywhere from 1 to 10 milliseconds. We have also prepared the faded in version of the same file, so you do some basic testing. (The given files are valid and do actually load and run on QuickTime Player, however you may not hear anything. This is normal, the example is constructed with the aim to check calculations easily, not to listen to them.)  
+</p>
+<ul>
+    <li><a href="./a1/small.wav">A small wav file</a></li>
+    <li><a href="./a1/small_fin.wav">Same file, faded in for 5 milliseconds</a></li>
+</ul>
+
+<h2>What to submit</h2>
+
+<p>
+    You will commit to your repository one file: 
+    <code>effects.c</code>. Only the file with exactly this name 
+    will be graded. You may submit additional files (e.g. test files), 
+    but they will not be marked.
+</p>
+
+    <section>
+      <div class="page-header">
+        <a name="comments"></a><h2>Comments</h2>
+      </div>
+      <div id="discourse-comments" class="span12">
+        <p>
+          Note: If the comments fail to load, try refreshing the page or
+          <a href="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/assignments/a1.shtml">
+            logging into the discussion board through this link
+          </a>.
+        </p>
+      </div>
+    </section>
+
+    <!--#include virtual="../footer.html" -->
+  </main><!-- /.container -->
+  <script type="text/javascript">
+    var DiscourseEmbed = {
+      discourseUrl: 'https://mcsapps.utm.utoronto.ca/forum/',
+      topicId: 4001
+    };
+
+    function loadComments() {
+      var d = document.createElement('script'); d.type = 'text/javascript'; d.async = true;
+      d.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(d);
+    }
+
+  </script>
+
+  <!-- Begin Furkan's hack: Using a hidden iframe, automatically
+  log the user into Discourse before attempting
+  to load the comments. This will only work if this page has
+  Shibboleth authentication enabled through the .htaccess file -->
+
+  <iframe src="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/load_comments.html" style="display:none;" width="0" height="0" name="forumlogin"></iframe>
+
+  <script>
+    window.addEventListener("message", function(event) {
+      if (event.origin != "https://mcs.utm.utoronto.ca") {
+        console.log("Ignoring cross-origin message from Discourse SSO iframe: " + event.origin);
+        return;
+      }
+
+      console.log("Received same-origin message from Discourse SSO iframe: loading comments.");
+      loadComments();
+    });
+  </script>
+
+  <!-- End Furkan's hack -->
+
+</body>
+</html>

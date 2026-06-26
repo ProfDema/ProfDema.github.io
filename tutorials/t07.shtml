@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<!--#include virtual="../head.shtml" -->
+<body>
+  <!--#include virtual="../navbar.html" -->
+  <script>var p = document.getElementById("menu.tutorials"); p.className = "nav-item active";</script>
+  <main role="main" class="container">
+    <h1 class="mt-5">Tutorial 7: Forking</h1>
+    <!--#set var="DEADLINE" value="10 p.m. on Friday, February 28, 2020" -->
+    <!--#include virtual="./deadline.shtml" -->
+    <h2>Introduction</h2>
+
+<p>
+The purpose of this exercise is to play with <code>fork</code>, and get a feeling for how it works.  It should be a fairly short lab.
+</p>
+
+<p>
+The <code>t07</code> directory in your repository contains a small collection of source files and a Makefile. Throughout the lab, you will be asked to answer some questions. Place the answers to the questions in the text file called <code>answers.txt</code> in the <code>t07</code> directory. Please make sure each answer is in the appropriate section of the file: the answer to question 1, for example, should be after the line "===== Question 1 =====" but before "===== Question 2 =====". <strong>Please do not modify the section breaks</strong>; they will help us mark your file.
+</p>
+
+<h2>Task 1: Run the <code>simplefork</code> program</h2>
+<p>
+Open <code>simplefork.c</code> in your favourite editor and then read it to see what it is doing. Use the Makefile to compile and run it a few times. As you read the output, recall from the PCRS videos that it is up to the operating system to decide whether the parent or the child runs first after the fork call, and it may change from run to run.
+</p>
+
+<p>
+<b>Question 1</b>: Which lines of output are printed more than once? <strong>Note:</strong> Do not use line numbers; simply list the letters, either all on the same line or one letter per line.
+</p>
+
+<p>
+<b>Question 2</b>: Enumerate the different possible orders for the output. For example, "ABDEBCE" is a legal ordering. Note that you may not be able to reproduce all input orders, since they are based on timing you do not control. To make it easy for us to mark this, please also include the line "Total orderings = N", where N is the number of orderings you discovered. <strong>Note:</strong> When counting the different orderings, ignore duplicates (i.e., multiple code execution paths that result in the same output printed).
+</p>
+
+<h2>Task 2: Fork in a loop</h2>
+
+<p>
+The program in <code>forkloop.c</code> takes one command-line argument that is the number of iterations of the loop that calls fork. Try it with at least 2, 3 and 4 as command-line arguments.
+</p>
+
+<p>
+<b>Question 3</b>: How many processes are created (including the original parent) when <code>forkloop</code> is called with 4 as an argument?
+</p>
+
+<p>
+<b>Question 4</b>: Use an ASCII diagram to show the processes and their relationships when you run it with the command-line argument "3". For example, the diagram for <code>forkloop</code> with command-line argument "2" (assuming the process id of the parent is 414 and the process ids of the children are 416, 417, and 420) might be:</p>
+
+<pre>    414 -> 416 -> 420
+    414 -> 417
+</pre>
+<p>When constructing your diagram, you should <strong>not</strong> include the PID of the shell process that is the parent to your program; i.e., the left-most PID (414) in the diagram above is that of the forkloop program itself. Recall that this tutorial will be auto-tested as usual, so make sure to follow the exact format as provided above. Moreover, if any of your processes become orphaned and are adopted by another process, ignore that when constructing your diagram.</p>
+<p>
+Notice that the shell prompt sometimes appears in the middle of the output. That happens because the parent process exits before some of the children get a chance to print their output.
+</p>
+
+<p>
+You may also see a change in the value of the parent PID. We are getting the parent's PID from the <code>getppid</code> system call. If a process's parent has terminated, the process gets "adopted" by the init process which has a process id of 1. So when you see the ppid of a process is 1, that means that its parent has terminated.
+</p>
+
+<h2>Task 3: Make the parent create all the new processes</h2>
+
+<p>
+Modify the <code>parentcreates.c</code> program so that child processes do not create additional children. Only the original parent process should create children. Both the parent and the child will print the output line (see sample output below).</p>
+
+<pre>
+$ <kbd>./parentcreates 3</kbd>
+pid = 21159, ppid = 20991, i = 0
+pid = 21159, ppid = 20991, i = 1
+pid = 21160, ppid = 21159, i = 0
+pid = 21159, ppid = 20991, i = 2
+pid = 21161, ppid = 21159, i = 1
+pid = 21162, ppid = 21159, i = 2
+</pre>
+
+<p>
+<strong>Note:</strong> As can be seen in the output above, the child process terminates after a single iteration in the loop. Also note that to achieve the correct result, you should <strong>not</strong> change the location of the <code>printf</code> statement in the starter code.
+</p>
+
+<p>The resulting diagram will look something like the following when <code>parentcreates 3</code> is called. Note that the process ids will differ and that the child process ids will not necessarily be in sequence.
+</p>
+
+
+<pre>    414 -> 416
+    414 -> 417
+    414 -> 420
+</pre>
+
+<h2>Task 4: Limit the processes each process may spawn</h2>
+
+<p>Modify the <code>childcreates.c</code> program so that each process creates at most
+one new process. All
+processes will print the output line. The resulting diagram will look something
+like the following when <code>childcreates 3</code> is called:</p>
+
+<pre>    414 -> 416 -> 417 -> 420
+</pre>
+
+<p>Below is a sample output from another run, when <code>childcreates 3</code> is called:</p>
+
+<pre>
+$ <kbd>./childcreates 3</kbd>
+pid = 9749, ppid = 12917, i = 0
+pid = 9750, ppid = 9749, i = 0
+pid = 9750, ppid = 9749, i = 1
+pid = 9751, ppid = 9750, i = 1
+pid = 9751, ppid = 9750, i = 2
+pid = 9752, ppid = 9751, i = 2
+</pre>
+
+<h2>Task 5: Add <code>wait</code> to delay the exit of the parent</h2>
+
+<p>Earlier, you may have seen that a parent process can terminate before its children. (If you didn't see that phenomenon, try running the <code>forkloop</code> program with a larger command-line argument like 5 or 6.)
+</p>
+
+<p>However, a process <i>can</i> wait for its children to terminate. (Normally, when you run a program from the shell, have you noticed that the prompt doesn't appear until the program terminates?) If a process wants to wait until all its children have terminated, it needs to call <code>wait</code> once for each child. Add the appropriate <code>wait</code> calls to both <code>childcreates</code> and <code>parentcreates</code> to ensure that each parent does not terminate before its children.</p>
+
+<p>Your programs should call <code>wait</code> as late as possible. If the process has other work to do, like creating more children, it should create the children before calling <code>wait</code>. If you call <code>wait</code> too early, then you end up slowing down your program because you are "serializing it" (reducing the number of things that run simultaneously, in parallel).</p>
+
+
+<h2>What to Submit</h2>
+
+<p>
+Make sure that your updated <code>childcreates.c</code>, <code>parentcreates.c</code>, and <code>answers.txt</code> files have been committed and pushed to the <code>t07</code> directory in your repository. We will verify some of the answers in your text file and will run your two C programs to make sure that the requested changes have been made.
+</p>
+
+    <section>
+      <div class="page-header">
+        <a name="comments"></a><h2>Comments</h2>
+      </div>
+      <div id="discourse-comments" class="span12">
+        <p>
+          Note: If the comments fail to load, try refreshing the page or
+          <a href="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/tutorials/t07.shtml">
+            logging into the discussion board through this link
+          </a>.
+        </p>
+      </div>
+    </section>
+
+    <!--#include virtual="../footer.html" -->
+  </main><!-- /.container -->
+  <script type="text/javascript">
+    var DiscourseEmbed = {
+      discourseUrl: 'https://mcsapps.utm.utoronto.ca/forum/',
+      topicId: 5198
+    };
+
+    function loadComments() {
+      var d = document.createElement('script'); d.type = 'text/javascript'; d.async = true;
+      d.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(d);
+    }
+
+  </script>
+
+  <!-- Begin Furkan's hack: Using a hidden iframe, automatically
+  log the user into Discourse before attempting
+  to load the comments. This will only work if this page has
+  Shibboleth authentication enabled through the .htaccess file -->
+
+  <iframe src="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/load_comments.html" style="display:none;" width="0" height="0" name="forumlogin"></iframe>
+
+  <script>
+    window.addEventListener("message", function(event) {
+      if (event.origin != "https://mcs.utm.utoronto.ca") {
+        console.log("Ignoring cross-origin message from Discourse SSO iframe: " + event.origin);
+        return;
+      }
+
+      console.log("Received same-origin message from Discourse SSO iframe: loading comments.");
+      loadComments();
+    });
+  </script>
+
+  <!-- End Furkan's hack -->
+
+</body>
+</html>
+

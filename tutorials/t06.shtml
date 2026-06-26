@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<!--#include virtual="../head.shtml" -->
+<body>
+  <!--#include virtual="../navbar.html" -->
+  <script>var p = document.getElementById("menu.tutorials"); p.className = "nav-item active";</script>
+  <main role="main" class="container">
+    <h1 class="mt-5">Tutorial 6: Make</h1>
+    <!--#set var="DEADLINE" value="10 p.m. on Friday, February 14, 2020" -->
+    <!--#include virtual="./deadline.shtml" -->
+    <h2>Introduction</h2>
+
+<p>
+  This lab is designed to give you some practice using
+  <code>make</code> and incorporating bash scripting into your
+  Makefiles. You may wish to look at the Makefiles for 
+  Assignments 1 and 2 for inspiration and examples.
+</p>
+
+<h2>Your Task</h2>
+<p>
+  The <code>t06</code> directory in your repository contains a
+  small collection of source, header, and test files. Nothing
+  particularly interesting is in the files. They are dummy programs
+  written to give you a project to compile. Much like Assignment 2,
+  two of the source files contain main functions, so your task
+  is to write a Makefile that compiles the two executables and
+  verifies that they perform as expected on the test file.
+</p>
+
+<p>
+  You may modify the given starter files to help you test,
+  but we are not expecting you to submit any C code in this
+  lab. The Makefile is the only deliverable.
+</p>
+
+<p>
+  The two executables are to be named <code>serialize</code>
+  (built using <code>serialize.c</code> and <code>helpers.c</code>)
+  and <code>deserialize</code> (built using
+  <code>deserialize.c</code> and <code>helpers.c</code>).
+  Several of the <code>.c</code> files rely on <code>helpers.h</code>.
+  Both executables read from <code>stdin</code> and do not expect
+  any arguments. Both emit output to <code>stdout</code>. If
+  they complete successfully, they will exit with status code 0;
+  if there is an error, they will exit with a non-zero status code.
+</p>
+
+<p>
+  Basic test input for the <code>serialize</code> program is in
+  <code>test.dat</code>. <code>deserialize</code> is expecting
+  input in the same format as <code>serialize</code>'s output,
+  so you can save the output of <code>serialize</code> to use
+  as input for <code>deserialize</code>.
+</p>
+
+<h2>Requirements</h2>
+
+<p>
+  Your Makefile has several required targets: <code>serialize</code>
+  and <code>deserialize</code>, which should create the specified
+  executables using separate compilation; <code>basic_test</code>,
+  described below; and <code>clean</code>, which should remove all
+  of the created executables and intermediate files. If make is
+  invoked without an argument, <code>basic_test</code> should be
+  executed. 
+</p>
+
+<p>
+  <code>basic_test</code> should update the executables, if
+  necessary, and then run <code>serialize</code> on the input
+  in <code>test.dat</code> and <code>deserialize</code> on the
+  output of <code>serialize</code> to verify that they both
+  complete successfully. If both programs execute successfully
+  (regardless of the output generated), then "Basic test passed"
+  should be printed. If one or both programs fail to execute, then
+  "Basic test failed" should be displayed. 
+</p>
+
+<h2>Tips</h2>
+
+<ol>
+  <li>
+    Each action in a rule must be preceded by a tab&mdash;not spaces.
+  </li>
+  <li>
+    Make sure to use separate compilation. Compile the .c
+    files into .o files and then link the .o files.
+  </li>
+  <li>
+    Include header files as dependencies for the files that
+    include them.
+  </li>
+  <li>
+    <code>@</code> can be used to keep Make from echoing the commands
+    it is executing.
+  </li>
+  <li>
+    Your action may include "automatic" <code>make</code> variables,
+    which are expanded by the <code>make</code> program before
+    executing the action. See the
+    <a href="https://www.gnu.org/software/make/manual/html_node/Automatic-Variables.html">GNU make</a>
+    manual for a full list of automatic variables.
+  </li>
+  <li>
+    If your action includes bash variables, the <code>$</code> will
+    need to be escaped (<code>$$</code>) so that it is not expanded
+    by make (so that it is instead expanded by Bash).
+  </li>
+  <li>
+    In the Bash shell, the variable <code>$?</code> contains the status
+    code for the last process that was executed. See Section 3.2.5: Special Parameters in
+    <a href="https://www.tldp.org/LDP/Bash-Beginners-Guide/html/Bash-Beginners-Guide.html#sect_03_02_05">Bash Guide for Beginners</a>
+  </li>
+</ol>
+
+<h2>What to Submit</h2>
+
+<p>
+  We'll be looking for a Makefile in your t06 directory.
+  Please make sure it has been added, committed, and pushed.
+  We will verify that the Makefile has the required rules and
+  compiles both executables correctly (1 point), rebuilds the
+  minimum number of targets necessary (1 point), and implements
+  the basic test correctly (1 point).
+</p>
+
+    <section>
+      <div class="page-header">
+        <a name="comments"></a><h2>Comments</h2>
+      </div>
+      <div id="discourse-comments" class="span12">
+        <p>
+          Note: If the comments fail to load, try refreshing the page or
+          <a href="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/tutorials/t06.shtml">
+            logging into the discussion board through this link
+          </a>.
+        </p>
+      </div>
+    </section>
+
+    <!--#include virtual="../footer.html" -->
+  </main><!-- /.container -->
+  <script type="text/javascript">
+    var DiscourseEmbed = {
+      discourseUrl: 'https://mcsapps.utm.utoronto.ca/forum/',
+      topicId: 4840
+    };
+
+    function loadComments() {
+      var d = document.createElement('script'); d.type = 'text/javascript'; d.async = true;
+      d.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(d);
+    }
+
+  </script>
+
+  <!-- Begin Furkan's hack: Using a hidden iframe, automatically
+  log the user into Discourse before attempting
+  to load the comments. This will only work if this page has
+  Shibboleth authentication enabled through the .htaccess file -->
+
+  <iframe src="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/load_comments.html" style="display:none;" width="0" height="0" name="forumlogin"></iframe>
+
+  <script>
+    window.addEventListener("message", function(event) {
+      if (event.origin != "https://mcs.utm.utoronto.ca") {
+        console.log("Ignoring cross-origin message from Discourse SSO iframe: " + event.origin);
+        return;
+      }
+
+      console.log("Received same-origin message from Discourse SSO iframe: loading comments.");
+      loadComments();
+    });
+  </script>
+
+  <!-- End Furkan's hack -->
+
+</body>
+</html>

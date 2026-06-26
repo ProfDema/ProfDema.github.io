@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<!--#include virtual="../head.shtml" -->
+<body>
+  <!--#include virtual="../navbar.html" -->
+  <script>var p = document.getElementById("menu.tutorials"); p.className = "nav-item active";</script>
+  <main role="main" class="container">
+    <h1 class="mt-5">Tutorial 9: Signals</h1>
+    <!--#set var="DEADLINE" value="10 p.m. on Friday, March 13, 2020" -->
+    <!--#include virtual="./deadline.shtml" -->
+    <h2>Introduction</h2>
+
+<p>
+The purpose of this lab is to practice using signal handlers and alarms and to review operations on binary files. You can use these techniques to explore how quickly your machine performs read and write operations. 
+</p>
+
+<p>
+More than previous weeks, this lab expects you to do some exploring on your own using the linked resources. Get started in the lab, where your TA is available for questions, and then use the discussion board if you are stuck for more than 15 minutes. A small amount of starter code for this lab has been pushed to your repository. 
+</p>
+
+<h2>Timing Reads: The Overall Task</h2>
+<p>
+In this lab, you will explore how various operations affect the runtime of a program. In short, you will be doing some <a href="https://en.wikipedia.org/wiki/Profiling_(computer_programming)">profiling</a>. You will write a C program that takes an integer argument s representing a number of seconds and a string representing a binary file f that contains 100 integers. The program will repeatedly generate a random integer from 0 to 99 and use that number as an index to read the corresponding integer from f. The program runs for s seconds and then reports how many reads were completed. 
+</p>
+
+<h2>Instructions</h2>
+
+<h3>1. Create a test file</h3>
+<p>
+  Since your program has to read integers from a binary file, you need to create a
+  test file containing 100 integers. Write a small program, <code>write_test_file.c</code>,
+  to do this task. It should take a single argument representing a filename and
+  create a file with that name that contains 100 integers. The values of the integers
+  themselves don't matter, so start off by writing the integers 0 through 99 in order.
+</p>
+<p>
+  Because your newly-created test file is binary, you can't display the integers with
+  cat, and a normal text editor won't work either. Instead, look at the contents with
+  the tool <a href="https://linux.die.net/man/1/od"><code>od</code></a>. The
+  <code>-vtu1</code> flag will display the contents in a format that is easier for
+  you to read. Once you've convinced yourself that the 100 integers are being
+  correctly written, change your <code>write_test_file</code> to write random
+  integers between 0 and 99. To generate random numers, use the function
+  <a href="https://linux.die.net/man/3/random"><code>random</code></a>.
+</p>
+
+<h3>2. Write a program to read random locations in the file</h3>
+<p>
+  The next step is to write the first draft of the <code>time_reads.c</code> program. The
+  starter code in the <code>t09</code> directory just handles the command line arguments.
+</p>
+<p>
+  For now, you will need to write code that goes into the loop. Your program should seek
+  to a random location in the file, read the integer at that location, and print it.
+  Change your program to seek and read in the infinite loop.
+</p>
+<p>
+  At the moment, the only way to stop your program is to send it a signal. You can do
+  this from the keyboard directly (with <kbd><kbd>ctrl</kbd>+<kbd>c</kbd></kbd>) or from another terminal window
+  (<a href="https://linux.die.net/man/1/ps">by looking up the PID</a> and
+  using the <a href="https://linux.die.net/man/1/kill">kill command</a>).
+  Try both ways.
+</p>
+
+<h3>3. Add a signal handler</h3>
+<p>
+  Now, use <a href="https://linux.die.net/man/2/sigaction"><code>sigaction</code></a> to
+  add a signal handler to your program. Start with something simple that just prints a
+  message and exits when it receives a <code>SIGPROF</code>. Then, to test it, run your
+  program and use <code>kill</code> to send it a <code>SIGPROF</code> signal from the shell
+  in another terminal window. (Check the <a href="https://linux.die.net/man/1/kill">man page 
+  for kill</a> to see how to get a listing of signals and their numbers.)
+</p>
+
+<h3>4. Add timing</h3>
+<p>
+  Add code to set up a timer (using <a href="https://linux.die.net/man/2/setitimer">
+  <code>setitimer</code></a>) for <code>s</code> seconds. You shouldn't use real time, since 
+  your results will be affected if your system is busy. Instead, use <code>ITIMER_PROF</code>
+  to make the itimer send a <code>SIGPROF</code>. (If you're curious, come back to
+  this later and use <code>SIGALRM</code> instead of <code>SIGPROF</code>. Run your code with
+  nothing executing and with a couple instances of programs that contain infinite loops.
+  What happens?)
+</p>
+<p>
+  Change your signal handler to print a message (use the <code>MESSAGE</code> format in the
+  starter code) that provides both the total number of reads completed and the time
+  elapsed. Run your code a few times to see how it works.
+</p>
+<p>
+  If you've been printing a message for every piece of data being read, you'll notice that
+  the alarm often happens while the statement is being printed, so only part of the output
+  will be delivered. Optionally, use <a href="https://linux.die.net/man/2/sigprocmask">
+  <code>sigprocmask</code></a> to mask the <code>SIGPROF</code> signal during the print
+  statement so that each line of output is full printed before the alarm is delivered and
+  the signal handler executes and finishes the program.
+</p>
+<p>
+  Once you've done this step, you can submit your lab. However, there's more to do to
+  explore how your computer works...
+</p>
+
+<h3>5. Explore! (Not for Lab Credit)</h3>
+<p>
+  Try different amounts of time (1 second? 2 seconds? 4 seconds?). Is the number of reads
+  that your program can perform per second fairly constant? (It's slower the first second.
+  Why do you think that is?) What happens if you remove the
+  print statement in the loop (not the one in your signal handler)? Can you explain why the number
+  of read operations per second changes? What does that tell you about the cost of printing?
+</p>
+<p>
+  The file was opened for reading <em>and</em> writing, so instead of reading a value, write a
+  random value at the offset. Is one operation more expensive than the other, and if so, can
+  you speculate as to why?
+</p>
+<p>
+  Now, change the size of your datafile (and be sure to change the possible offsets generated
+  in your program). Does the number of reads (or writes) per second
+  change if the file size is much larger? If so, is there a specific file size where the
+  change occurs? Do you have an explanation as to why?
+</p>
+
+<h2>What to Submit</h2>
+<p>
+  Commit and push both <tt>write_test_file.c</tt> and <tt>time_reads.c</tt> to your <tt>t09</tt>
+  directory in your git repository.
+</p>
+
+    <section>
+      <div class="page-header">
+        <a name="comments"></a><h2>Comments</h2>
+      </div>
+      <div id="discourse-comments" class="span12">
+        <p>
+          Note: If the comments fail to load, try refreshing the page or
+          <a href="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/tutorials/t09.shtml">
+            logging into the discussion board through this link
+          </a>.
+        </p>
+      </div>
+    </section>
+
+    <!--#include virtual="../footer.html" -->
+  </main><!-- /.container -->
+  <script type="text/javascript">
+    var DiscourseEmbed = {
+      discourseUrl: 'https://mcsapps.utm.utoronto.ca/forum/',
+      topicId: 5456
+    };
+
+    function loadComments() {
+      var d = document.createElement('script'); d.type = 'text/javascript'; d.async = true;
+      d.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(d);
+    }
+
+  </script>
+
+  <!-- Begin Furkan's hack: Using a hidden iframe, automatically
+  log the user into Discourse before attempting
+  to load the comments. This will only work if this page has
+  Shibboleth authentication enabled through the .htaccess file -->
+
+  <iframe src="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/load_comments.html" style="display:none;" width="0" height="0" name="forumlogin"></iframe>
+
+  <script>
+    window.addEventListener("message", function(event) {
+      if (event.origin != "https://mcs.utm.utoronto.ca") {
+        console.log("Ignoring cross-origin message from Discourse SSO iframe: " + event.origin);
+        return;
+      }
+
+      console.log("Received same-origin message from Discourse SSO iframe: loading comments.");
+      loadComments();
+    });
+  </script>
+
+  <!-- End Furkan's hack -->
+
+</body>
+</html>
+

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<!--#include virtual="../head.shtml" -->
+<body>
+  <!--#include virtual="../navbar.html" -->
+  <script>var p = document.getElementById("menu.tutorials"); p.className = "nav-item active";</script>
+  <main role="main" class="container">
+    <h1 class="mt-5">Tutorial 1: The Shell</h1>
+    <!--#set var="DEADLINE" value="10 p.m. on Friday, January 10, 2020" -->
+    <!--#include virtual="./deadline.shtml" -->
+<h2>Introduction</h2>
+
+<p>
+  The purpose of this lab is to practice using the shell to navigate a linux file system,
+  to complete a few simple tasks, and to submit your files using git.
+</p>
+
+<p>
+You may complete this lab on your own machine, if you are running linux, macOS, or <a href="https://www.howtogeek.com/249966/how-to-install-and-use-the-linux-bash-shell-on-windows-10/">using the bash shell on Windows 10</a>, or you may complete the lab on a linux machine, either by logging into the machine directly or by using <code>ssh</code>. You probably want to complete the lab on the machine you'll be using while writing code for this course. However, there's an advantage to doing so on the lab machines: your code will be tested on a lab machine, so you should <em>always</em> test your assignment code on a lab machine before submission. This doesn't mean you have to work on campus: the lab machines can be accessed remotely by sshing to <code>dhXXXXpcYY.utm.utoronto.ca</code> where <code>XXXX</code> is the lab room number (2020 or 2026, in Deerfield Hall) and <code>YY</code> is the PC number (01 to 30).
+</p>
+
+<p>
+If you're using your own machine, you'll need to install a number of core development tools, like the C compiler. On many linux systems and on the Windows 10 bash shell, you can install them by typing <kbd>sudo apt update</kbd> (don't skip this) followed by <kbd>sudo apt install build-essential</kbd> on the command line. Note that this command uses <code>sudo</code>, so you need to have root (i.e., administrator) permissions.
+</p>
+
+<p>
+If you are a macOS user, you should be aware that there will be a number of major differences between your environment and that in the lab. For example, <a href="https://www.theverge.com/2019/6/4/18651872/apple-macos-catalina-zsh-bash-shell-replacement-features">recent versions of macOS no longer use the Bash shell</a>. Moreover, the <code>gcc</code> command on macOS is actually <em>aliased</em> (explained later in this tutorial) to <code>llvm</code> rather than the <code>gcc</code> compiler. Therefore, you may observe differences in errors and warnings that are generated. While it may be useful to test your code on multiple compilers (e.g., <code>llvm</code> has developed a reputation for having more helpful error/warning messages), any tutorials or assignments that you submit throughout the course <strong>must</strong> compile and run correctly on the officially-supported lab environment. Moreover, please keep it under consideration that most of us will not be familiar with macOS, so can not guarantee any help/support, but you may have TAs and/or classmates familiar with macOS who are willing to offer help.
+</p>
+
+<h2>Walkthrough</h2>
+
+<p>
+To start the tutorial, we're going to clone your git repository.:
+</p>
+
+<ol>
+  <li>Visit <a href="https://mcsmark.utm.utoronto.ca/csc209s20">MarkUs</a> and click on the Tutorial 1 link. This will create a <code>t01</code> directory in your git repository. On this page, you can check to see that your work was submitted correctly. You may also sometimes see starter code, when applicable, or a list of required files for submission. If you encounter an error or blank page after clicking the link, continue to the next step to see if the error will be resolved.</li>
+  <li>Open a terminal (on Ubuntu, which is installed on the lab PCs, you may use the shortcut <kbd>ctrl+alt+t</kbd>). When you start the terminal, you will be in your home directory. (You can type <kbd>pwd</kbd> to see the full path to this directory.)</li>
+  <li>Type <kbd>git clone https://mcsmark.utm.utoronto.ca/git/csc209h_20201/repo/bare/UTORid 209_repo</kbd>, replacing <kbd>UTORid</kbd> with your UTORid (you can also find your repo URL from <a href="https://mcsmark.utm.utoronto.ca/csc209s20">MarkUs</a>. You should now see a new directory called <code>209_repo</code> containing your git repo. If you did not experience any problems in Step 1, you should also see a <code>t01</code> subdirectory inside of it.</li>
+  <li>If you encountered any errors (or a blank page) in Step 1, try creating the <code>t01</code> directory manually and committing/pushing it to your repository (but you should only ever do this manually if you encounter a problem with Step 1: otherwise you may risk missing out on starter code on some tutorials/assignments, for example). Now, go back to Step 1 to ensure that the error is resolved. If not, or if you were unable to log in to MarkUs, please contact our system administrator <a href="https://www.utm.utoronto.ca/math-cs-stats/faculty-staff/wang-andrew">Andrew Wang</a>.</li>
+</ol>
+
+<p>Now, let's explore that directory. Type <kbd>cd 209_repo</kbd> to change your working directory to the one you just created. Then, type <kbd>ls</kbd> to list the files in that directory. You should see a <code>t01</code> directory that has already been created for you by MarkUs. Try <kbd>ls -la</kbd>. Now, you should also see a directory named <code>.git</code>, which contains information that git uses to keep your repository synchronized. The leading <code>.</code> tells the system that this should be a hidden file, i.e., one that isn't shown unless specifically asked for.</p>
+
+<h3>Creating Aliases and Persistent Shell Configuration</h3>
+
+<p>
+I find it fairly useful to have <code>ls</code> always show me all files, so I have it set as an <code>alias</code>. Since I prefer to see the file sizes in human-readable units (e.g., 1K, 234M, 2G, instead of displaying all file sizes in bytes), I also use the <code>h</code> flag. Type <kbd>alias ls='ls -lah'</kbd> in the shell. Then, try <kbd>ls</kbd> (without arguments) again. See how it acts? <code>alias</code> creates a replacement; when you type <kbd>ls</kbd>, the shell replaces it with <kbd>ls -lah</kbd>.
+</p>
+
+<p>
+  Now, exit (by typing <kbd>exit</kbd>) and then reopen a terminal. Try <kbd>ls</kbd> again. See how it's changed back so that it only provides basic information? We need a way to make this change permanent.
+</p>
+
+<p>
+<a href="http://www.joshstaiger.org/archives/2005/07/bash_profile_vs.html">To do this, we'll need to make certain configuration files run when we log into the terminal.</a> To create these files, you'll need to edit text files. Three of the most popular UNIX text editors are <code>nano</code> (very basic features), <code>emacs</code>, and <code>vim</code> (these latter two are much more powerful, but have a steeper learning curve). You may be amused to learn that the <code>emacs</code> vs. <code>vim</code> debate sparked many "flame wars" between users in the 1980s; check out <a href="https://en.wikipedia.org/wiki/Editor_war">this Wikipedia page on the "Editor war"</a> for more historical background. There are many tutorials available online for both <code>emacs</code> and <code>vim</code> (for <code>nano</code>, you shouldn't really need a tutorial). Some more unique tutorials for <code>vim</code> are <a href="https://vim-adventures.com/">VIM Adventures</a> and <a href="https://www.openvim.com">Interactive Vim tutorial</a>. I highly recommend that you get used to using a UNIX text editor in this course, since it will help you stick to working in the terminal and master linux much more quickly.
+</p>
+
+<p>
+  Use your text editor to edit a file in your home directory. The file should be named <code>.bash_profile</code>. Put this text into that file:
+</p>
+
+  <pre>if [ -f ~/.bashrc ]; then
+   source ~/.bashrc
+fi</pre>
+
+  <p>
+  That says, "If there is a file named <code>.bashrc</code> in my home directory, then source it." Note that <code>~</code> (tilde) is used as shorthand for "my home directory" and that <code>source</code> is a command: it means "run this script and save any variables it creates in my environment."
+  </p>
+
+  <p>
+    Now, anything you put into your <code>.bashrc</code> should run when you log in, as if you had typed each command into the command line yourself. You might end up putting a lot into this file: you could update your path, add aliases, change your prompt, etc. For now, let's add an alias. Edit the <code>.bashrc</code> file in your home directory. Add this line to it:
+  </p>
+
+  <pre>alias ls='ls -lah'</pre>
+
+  <p>
+    To test that it works, exit your terminal and then start it again. When you type <kbd>ls</kbd>, you should see the same detailed output that you saw when you typed <kbd>ls -lah</kbd>.
+  </p>
+
+  <p>
+  If that works, then let's do one more thing: let's change our prompt. In the command line, type <kbd>PS1='Hi!'</kbd>. What just happened? Try this: <kbd>PS1='\w\$ '</kbd>. To see why <kbd>\w</kbd> is your current working directory, check out <a href="https://www.gnu.org/software/bash/manual/bashref.html#Controlling-the-Prompt">this page in the Bash Reference Manual</a>. Then, set your prompt to something you like permanently by assigning to <code>PS1</code> in your <code>.bashrc</code>. Note: <code>PS1</code> is an <strong>environment variable</strong>, just like the <code>PATH</code> environment variable discussed in the Week 1 slides.
+  </p>
+
+<h3>man</h3>
+
+  <p>
+  We should pause to talk about getting help. Type <kbd>man ls</kbd>. This opens up a manual (man) page. You can also type <kbd>man ls</kbd> in your web browser; this will likely take you <a href="http://man7.org/linux/man-pages/man1/ls.1.html">to a page like this</a>, in case you want to keep the help page open. All man pages will have roughly the same structure: a synopsis, that lists all the possible options, a brief description, a full description of each option, some metainformation, and then a list of related commands. Can you see what the <code>-l</code> and <code>-a</code> options we used at the beginning of this tutorial do?
+  </p>
+
+  <p>
+  For this course, <strong>I will assume that you will be using man, or something like it, to learn about C library calls</strong>. There will be times that there are useful library calls that we will not have time to mention in class. Please check the man pages to learn about library and system calls and to find new calls that you need. Check <kbd>man man-pages</kbd> for a general tutorial on how to use the man pages, and <kbd>man man</kbd> as a reference for how to use the <code>man</code> command.
+  </p>
+
+  <!--
+  <p>
+  Let's take a quick look at a common C library call: <code>open</code>. If you type <kbd>man open</kbd>, you'll get a page, but as you read it, you'll see that it looks like it isn't quite what you want: it's talking about <code>openvt</code> (if you're in the linux lab). We need <code>open</code> from the C library section. There's a command line option you can use to get help from a specific section of the manual. Type <kbd>man man</kbd> to get help on <code>man</code> itself. Then, use it to figure out what command to type to get help on <code>open</code> from the "system calls" section of the manual.
+  </p>
+
+  <p>
+    If you type the right command, you should <a href="http://man7.org/linux/man-pages/man2/open.2.html">see a page like this one.</a> (Talk to your TA or a person near you if you're having trouble reading the man page on man.) The synopsis of C command-line arguments is particularly helpful, since it tells you (a) what libraries need to be included and (b) what arguments the command takes.
+  </p>-->
+
+<h3>Adding to your Repository</h3>
+
+  <p>
+  Now, let's get you credit for the lab. Change into your <code>t01</code> directory in your course repository: <kbd>cd ~/209_repo/t01</kbd>. Next, copy your <code>.bashrc</code> file into this folder, to prove that you can create an alias and set your prompt. (Hint: use the <code>cp</code> command. Use <code>man</code> to learn about it, if necessary.) Then, add this file to the repository, commit, and push:
+  </p>
+
+  <pre>    git add .bashrc
+    git commit
+    git push
+  </pre>
+
+  <p>
+    So, it may not be <i>that</i> simple. Depending on your machine, you might see an error that asks you to set your username or even your remote. Remember to use <code>man</code> to get help (or from <code>git</code> itself, by typing <kbd>git help</kbd>) and ask your TA if you get into trouble.
+  </p>
+
+  <p>
+    I find that I almost always want to push whenever I commit. You can create an alias in your <code>.bashrc</code> that performs a commit and a push, together, so you don't forget.
+  </p>
+
+<h3>Compiling C files</h3>
+
+  <p>
+    One last task! For most of the rest of the term, we're going to be writing and testing C programs.  Go back to your <code>t01</code> directory in your repository. Use your text editor to write a hello world program. Name the file <code>hello.c</code> and enter the text below, which contains one error ...
+  </p>
+
+  <pre>int main(int argc, char *argv[]) {
+    printf("Hello world!\n");
+    return 0;
+}</pre>
+
+  <p>
+  Once you enter that code, you'll need to compile and run it. To compile it, type <kbd>gcc -Wall hello.c</kbd>. This will compile your <code>hello.c</code> file into an executable file named <code>a.out</code>. It uses a single argument, <code>-Wall</code>, which asks the compiler to emit all warnings that are generally considered important (<code>-Wextra</code> displays even more warnings, and <code>-Wpedantic</code> displays all warnings). I almost always use this argument when compiling. What do you see when you compile?
+  </p>
+
+  <p>
+  Can you fix the error? The error seems related to <code>printf</code>, so use <code>man</code> to look up the command to see if you can find the error. (Hint: <code>printf</code> is in section 3 of the manual, and you might find <kbd>man man-pages</kbd> helpful.)
+  </p>
+
+  <p>
+  Once you get the program running, modify it further so that it acts <strong>exactly</strong> as follows, based on whether an odd or even number of arguments are provided (hint: <code>argc</code> will be useful).:
+  </p>
+
+  <pre>
+    alice:~/209$ gcc -Wall hello.c
+    $ ./a.out
+    Hello world!
+    $ ./a.out a b c
+    Hello 2 you, world!
+    $ ./a.out 2
+    Hello 2 you, world!
+    $ ./a.out 2 a
+    Hello world!
+  </pre>
+
+  <div class="alert alert-danger" role="alert">
+    Ensure that the messages being printed are identical to what is displayed above, including punctuation and/or whitespace.
+  </div>
+
+  <p>
+  Once your code runs, create a <code>.gitignore</code> file in your git repository to ensure that executables like <code>a.out</code> (or any other unnecessary/temporary files) aren't accidentally added to your git repository. Commit and push the <code>.gitignore</code> file to your repository. Then, commit just your .c file to your repository and push it, ensuring that your <code>a.out</code> file is not being committed/pushed.
+  </p>
+
+<h2>Submitting Your Work</h2>
+
+<div class="alert alert-danger" role="alert">
+	Repeated for emphasis: Since this tutorial will be marked by automated scripts, please ensure that you follow the submission instructions <strong>exactly</strong>, including the required file names and directory structure. Also note that Linux is case-sensitive.
+</div>
+
+<p>
+Before you go, make sure there is is a <code>t01</code> directory in your repository, and that it contains a copy of your <code>.bashrc</code>, <code>hello.c</code>, and <code>.gitignore</code> files, and that only those files (but not <code>a.out</code> or any other unnecessary files) have been committed <strong>and</strong> pushed.
+</p>
+
+<p>
+  If you'd like extra practice or want to do some work on shell scripting before next week, take a look at this <a href="https://swcarpentry.github.io/shell-novice/">software carpentry tutorial on the shell</a>. See you next week!
+</p>
+
+
+    <section>
+      <div class="page-header">
+        <a name="comments"></a><h2>Comments</h2>
+      </div>
+      <div id="discourse-comments" class="span12">
+        <p>
+          Note: If the comments fail to load, try refreshing the page or
+          <a href="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/tutorials/t01.shtml">
+            logging into the discussion board through this link
+          </a>.
+        </p>
+      </div>
+    </section>
+
+    <!--#include virtual="../footer.html" -->
+  </main><!-- /.container -->
+  <script type="text/javascript">
+    var DiscourseEmbed = {
+      discourseUrl: 'https://mcsapps.utm.utoronto.ca/forum/',
+      topicId: 3888
+    };
+
+    function loadComments() {
+      var d = document.createElement('script'); d.type = 'text/javascript'; d.async = true;
+      d.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(d);
+    }
+
+  </script>
+
+  <!-- Begin Furkan's hack: Using a hidden iframe, automatically
+  log the user into Discourse before attempting
+  to load the comments. This will only work if this page has
+  Shibboleth authentication enabled through the .htaccess file -->
+
+  <iframe src="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/load_comments.html" style="display:none;" width="0" height="0" name="forumlogin"></iframe>
+
+  <script>
+    window.addEventListener("message", function(event) {
+      if (event.origin != "https://mcs.utm.utoronto.ca") {
+        console.log("Ignoring cross-origin message from Discourse SSO iframe: " + event.origin);
+        return;
+      }
+
+      console.log("Received same-origin message from Discourse SSO iframe: loading comments.");
+      loadComments();
+    });
+  </script>
+
+  <!-- End Furkan's hack -->
+
+</body>
+</html>

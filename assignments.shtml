@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<!--#include virtual="head.shtml" -->
+<body>
+  <!--#include virtual="navbar.html" -->
+  <script>
+  var p = document.getElementById("menu.assignments");
+  p.className = "nav-item active";
+  </script>
+  <main role="main"
+        class="container">
+    <div class="row">
+      <div class="col-sm-4">
+        <h1 class="mt-5"></h1>
+        <div class="list-group">
+          <a href="./assignments/a1.shtml"
+            class="list-group-item list-group-item-action list-group-item-secondary">
+            Assignment 1: Standard Input/Output and Memory Allocation
+          </a>
+          <a href="./assignments/a2.shtml"
+            class="list-group-item list-group-item-action list-group-item-secondary">
+            Assignment 2: System Calls and Dynamic Memory
+          </a>
+          <a href="./assignments/a3.shtml"
+            class="list-group-item list-group-item-action list-group-item-secondary">
+            Assignment 3: Processes and Pipes
+          </a>
+          <a href="./assignments/a4.shtml"
+            class="list-group-item list-group-item-action list-group-item-secondary">
+            Assignment 4: Chat Server and Client 
+          </a>
+        </div>
+      </div>
+      <div class="col-sm-8">
+        <h1 class="mt-5">Assignments Overview</h1>
+        <p>
+          You will be using a git repository to submit your
+          assignments to <a href=
+          "https://mcsmark.utm.utoronto.ca/csc209s20/">MarkUs</a>.
+          Please commit frequently, to avoid losing your work, and
+          please make sure that required files and folder are named
+          precisely as specified.
+        </p>
+        <p>
+          If you need a refresher on how to use git or have never
+          used git on the command line, please refer to the tutorial
+          from the Git manual by running <kbd>man gittutorial</kbd>
+          from the shell.
+        </p>
+      </div>
+    </div><!-- /.row -->
+  </main><!-- /.container -->
+  <!--#include virtual="footer.html" -->
+</body>
+</html>

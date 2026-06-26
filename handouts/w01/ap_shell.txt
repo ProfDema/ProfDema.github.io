@@ -1,0 +1,327 @@
+### Welcome to the shell! 
+### ls lists all of the files in your current location. 
+### Try to think of each directory as a location. Where you currently are is 
+### your "current working directory".
+
+peters43:~/courses/209/lectures/w1$ ls
+total 280
+41321552 drwxr-xr-x  4 peters43  staff     136  2 Jan 09:41 ./
+41321551 drwxr-xr-x  3 peters43  staff     102  1 Jan 22:59 ../
+41355201 drwxr-xr-x  5 peters43  staff     170  2 Jan 13:12 ex/
+41355100 -rw-r--r--@ 1 peters43  staff  142135  2 Jan 10:30 intro.pptx
+
+### The last directory we were in had a directory ex (see the "/"), so
+### we use cd (change directory) to change our location.
+
+peters43:~/courses/209/lectures/w1$ cd ex/
+peters43:~/courses/209/lectures/w1/ex$ ls
+total 24
+41355201 drwxr-xr-x  5 peters43  staff  170  2 Jan 13:12 ./
+41321552 drwxr-xr-x  4 peters43  staff  136  2 Jan 09:41 ../
+41359327 -rw-r--r--  1 peters43  staff  124  2 Jan 10:01 faculty.txt
+41355199 -rw-r--r--  1 peters43  staff   76  2 Jan 09:28 hello.c
+41355265 -rw-r--r--  1 peters43  staff  156  2 Jan 09:29 loopy.c
+
+### Note that the number associated with ".." is the same as the number
+### associated with "." previously. That's because "." is our current
+### directory and ".." is its parent directory (the directory that contains
+### this one). The number is an inode. You'll learn more about that in
+### CSC369.
+
+### ls can take arguments. 
+
+peters43:~/courses/209/lectures/w1/ex$ ls ..
+total 280
+41321552 drwxr-xr-x  4 peters43  staff     136  2 Jan 09:41 ./
+41321551 drwxr-xr-x  3 peters43  staff     102  1 Jan 22:59 ../
+41355201 drwxr-xr-x  5 peters43  staff     170  2 Jan 13:12 ex/
+41355100 -rw-r--r--@ 1 peters43  staff  142135  2 Jan 10:30 intro.pptx
+peters43:~/courses/209/lectures/w1/ex$ ls .
+total 24
+41355201 drwxr-xr-x  5 peters43  staff  170  2 Jan 13:12 ./
+41321552 drwxr-xr-x  4 peters43  staff  136  2 Jan 09:41 ../
+41359327 -rw-r--r--  1 peters43  staff  124  2 Jan 10:01 faculty.txt
+41355199 -rw-r--r--  1 peters43  staff   76  2 Jan 09:28 hello.c
+41355265 -rw-r--r--  1 peters43  staff  156  2 Jan 09:29 loopy.c
+
+### I'm going to use vi -- a text editor -- to look at the contents of 
+### a file. Use your favorite editor. You don't have to use vi.
+
+peters43:~/courses/209/lectures/w1/ex$ vi faculty.txt 
+
+### linux also gives us a command for viewing the contents of a file. 
+### vi is a useful tool, but it's not a unix tool. Unix tools often
+### take text as an input and provides text as an output, so you can
+### string them together. 
+
+peters43:~/courses/209/lectures/w1/ex$ cat faculty.txt 
+Fidler, Sanja
+Zhang, Larry
+Zingaro, Dan
+Rosenbloom, Arnold
+Petersen, Andrew
+Wigdor, Daniel
+Bonner, Anthony
+
+### Since we use files to provide text input, it's important that we can
+### send the output of a tool to a file. The "output redirect" operator
+### does this.
+
+peters43:~/courses/209/lectures/w1/ex$ cat faculty.txt > faculty_copy.txt
+peters43:~/courses/209/lectures/w1/ex$ cat faculty_copy.txt 
+Fidler, Sanja
+Zhang, Larry
+Zingaro, Dan
+Rosenbloom, Arnold
+Petersen, Andrew
+Wigdor, Daniel
+Bonner, Anthony
+peters43:~/courses/209/lectures/w1/ex$ ls
+total 32
+41355201 drwxr-xr-x  6 peters43  staff  204  2 Jan 13:13 ./
+41321552 drwxr-xr-x  4 peters43  staff  136  2 Jan 09:41 ../
+41368261 -rw-r--r--  1 peters43  staff  124  2 Jan 13:13 faculty.txt
+41368269 -rw-r--r--  1 peters43  staff  124  2 Jan 13:13 faculty_copy.txt
+41355199 -rw-r--r--  1 peters43  staff   76  2 Jan 09:28 hello.c
+41355265 -rw-r--r--  1 peters43  staff  156  2 Jan 09:29 loopy.c
+
+peters43:~/courses/209/lectures/w1/ex$ rm faculty_copy.txt
+
+### Here's another command, sort. Note that each command does something small:
+### printing the contents of a file or sorting it. We will string them
+### together to do more interesting things. You'll find that each unix tool 
+### is like a function in a programming language ... and the shell really is
+### a programming environment, with the ability to define loops, conditionals,
+### and variables.
+
+peters43:~/courses/209/lectures/w1/ex$ sort faculty.txt 
+Bonner, Anthony
+Fidler, Sanja
+Petersen, Andrew
+Rosenbloom, Arnold
+Wigdor, Daniel
+Zhang, Larry
+Zingaro, Dan
+peters43:~/courses/209/lectures/w1/ex$ cat faculty.txt 
+Fidler, Sanja
+Zhang, Larry
+Zingaro, Dan
+Rosenbloom, Arnold
+Chaturvedi, Ritu
+Petersen, Andrew
+Wigdor, Daniel
+Bonner, Anthony
+
+### Note that sorting the file faculty.txt didn't modify it. The tool takes text
+### as input and produces text as output. It does NOT, as a side effect, update
+### the input. *This is important.* It's a result of the unix philosophy.
+
+### What happens if we redirect to an existing file? Or if we try to modify our
+### file by sending the output to the input source?
+
+peters43:~/courses/209/lectures/w1/ex$ cat faculty.txt > faculty.txt 
+peters43:~/courses/209/lectures/w1/ex$ ls
+total 24
+41355201 drwxr-xr-x  6 peters43  staff  204  2 Jan 13:14 ./
+41321552 drwxr-xr-x  4 peters43  staff  136  2 Jan 09:41 ../
+41368261 -rw-r--r--  1 peters43  staff    0  2 Jan 13:14 faculty.txt
+41355199 -rw-r--r--  1 peters43  staff   76  2 Jan 09:28 hello.c
+41355265 -rw-r--r--  1 peters43  staff  156  2 Jan 09:29 loopy.c
+peters43:~/courses/209/lectures/w1/ex$ cat faculty_copy.txt 
+
+### The file is empty ... why?
+
+### The output destination (a file) was opened before the tool was run. When you
+### open a file for writing, what happens to it?  And what does that mean when
+### the tool, then, tried to read from it?
+
+### I'll use git to recover the file. Make sure to commit to git often!
+
+peters43:~/courses/209/lectures/w1/ex$ git checkout -- faculty.txt
+
+### Instead, send the output to a separate file. You can copy it over the original
+### file later, if you choose.
+
+peters43:~/courses/209/lectures/w1/ex$ sort faculty.txt > faculty_sorted.txt
+peters43:~/courses/209/lectures/w1/ex$ ls
+total 32
+41355201 drwxr-xr-x  7 peters43  staff  238  2 Jan 13:54 ./
+41321552 drwxr-xr-x  4 peters43  staff  136  2 Jan 09:41 ../
+41368261 -rw-r--r--  1 peters43  staff  124  2 Jan 13:13 faculty.txt
+41371066 -rw-r--r--  1 peters43  staff  124  2 Jan 13:54 faculty_sorted.txt
+41355199 -rw-r--r--  1 peters43  staff   76  2 Jan 09:28 hello.c
+41355265 -rw-r--r--  1 peters43  staff  156  2 Jan 09:29 loopy.c
+peters43:~/courses/209/lectures/w1/ex$ cat faculty_sorted.txt 
+Bonner, Anthony
+Fidler, Sanja
+Petersen, Andrew
+Rosenbloom, Arnold
+Wigdor, Daniel
+Zhang, Larry
+Zingaro, Dan
+
+### Output redirection isn't just for cat and sort. It can be used with any 
+### command line tool that produces output. Note that the output file *was*
+### created before ls was run. It shows up in the listing with size 0.
+
+peters43:~/courses/209/lectures/w1/ex$ ls > directory_contents.txt
+peters43:~/courses/209/lectures/w1/ex$ cat directory_contents.txt 
+total 32
+41355201 drwxr-xr-x  8 peters43  staff  272  2 Jan 13:55 ./
+41321552 drwxr-xr-x  4 peters43  staff  136  2 Jan 09:41 ../
+41371069 -rw-r--r--  1 peters43  staff    0  2 Jan 13:55 directory_contents.txt
+41368261 -rw-r--r--  1 peters43  staff  124  2 Jan 13:13 faculty.txt
+41371066 -rw-r--r--  1 peters43  staff  124  2 Jan 13:54 faculty_sorted.txt
+41355199 -rw-r--r--  1 peters43  staff   76  2 Jan 09:28 hello.c
+41355265 -rw-r--r--  1 peters43  staff  156  2 Jan 09:29 loopy.c
+
+### Note that directory_contents has size 0 above. Why?
+
+### We can chain together multiple commands. Here, we're using a pipe (|) to
+### specify that the output of the sort tool should be used as the input of the
+### grep tool.
+
+### grep is a regular expression parser. It'll look for any lines that contain
+### the regular expression (just "Z" in this case) specified and output them.
+
+peters43:~/courses/209/lectures/w1/ex$ sort faculty.txt | grep "Z"
+Zhang, Larry
+Zingaro, Dan
+
+### Since I don't like seeing Dan's name (Hi, Dan! I heard you made fun of me
+### in class!), I'll pass in a command line option to output the lines that
+### *don't* match the regex.
+
+peters43:~/courses/209/lectures/w1/ex$ sort faculty.txt | grep -v "Z"
+Bonner, Anthony
+Fidler, Sanja
+Petersen, Andrew
+Rosenbloom, Arnold
+Wigdor, Daniel
+
+### How did I know that -v is an option? There's a great manual (man) page 
+### system. Get used to looking up tools as you use them. In many cases, there will
+### be an option that does what you want.
+
+peters43:~/courses/209/lectures/w1/ex$ man grep
+
+### Now -- where are all these commands coming from? We're deep in the file structure:
+### in my home directory, plus courses/209/lectures/w1/ex. We can go to the root.
+
+peters43:~/courses/209/lectures/w1/ex$ cd /
+peters43:/$ ls
+total 69
+       2 drwxr-xr-x   32 root  wheel  1156 31 Oct 20:44 ./
+       2 drwxr-xr-x   32 root  wheel  1156 31 Oct 20:44 ../
+ 9424718 -rw-rw-r--    1 root  admin  6148  2 Oct 17:21 .DS_Store
+  615249 d--x--x--x    9 root  wheel   306 15 Dec 14:38 .DocumentRevisions-V100/
+  400202 drwxr-xr-x    2 root  wheel    68 12 Nov  2014 .PKInstallSandboxManager/
+  603763 drwx------    5 root  wheel   170 12 Nov  2014 .Spotlight-V100/
+  603991 d-wx-wx-wt    2 root  wheel    68  8 May  2015 .Trashes/
+37444456 ----------    1 root  admin     0 28 Oct 18:26 .file
+  603929 drwx------  128 root  wheel  4352  2 Jan 12:57 .fseventsd/
+ 9424720 drwxr-xr-x@   2 root  wheel    68  7 Oct  2015 .vol/
+ 9424721 drwxrwxr-x+  86 root  admin  2924 30 Nov 08:12 Applications/
+ 9503346 drwxr-xr-x+  66 root  wheel  2244  8 Jun  2016 Library/
+ 9538772 drwxr-xr-x@   2 root  wheel    68  7 Oct  2015 Network/
+ 9424688 drwxr-xr-x@   4 root  wheel   136 11 Jan  2016 System/
+  607454 lrwxr-xr-x    1 root  wheel    49  8 May  2015 User Information@ -> /Library/Documentation/User Information.localized
+  168915 drwxr-xr-x    6 root  admin   204  7 Oct  2015 Users/
+   14238 drwxrwxrwt@   4 root  admin   136  1 Jan 15:25 Volumes/
+ 9827999 drwxr-xr-x@  39 root  wheel  1326 11 Jan  2016 bin/
+ 9828037 drwxrwxr-t@   2 root  admin    68  7 Oct  2015 cores/
+     300 dr-xr-xr-x    3 root  wheel  4456 15 Dec 14:38 dev/
+ 9828039 lrwxr-xr-x@   1 root  wheel    11  7 Oct  2015 etc@ -> private/etc
+       5 dr-xr-xr-x    2 root  wheel     1  1 Jan 22:14 home/
+ 9828040 -rw-r--r--@   1 root  wheel   313 22 Aug  2015 installer.failurerequests
+       3 dr-xr-xr-x    2 root  wheel     1  1 Jan 22:14 net/
+ 1200713 drwxrwxr-x@   5 root  wheel   170 26 Aug 10:13 opt/
+ 9424670 drwxr-xr-x@   6 root  wheel   204  7 Oct  2015 private/
+ 9828674 drwxr-xr-x@  59 root  wheel  2006 11 Jan  2016 sbin/
+ 9828732 lrwxr-xr-x@   1 root  wheel    11  7 Oct  2015 tmp@ -> private/tmp
+ 9828733 drwxr-xr-x@  11 root  wheel   374  7 Oct  2015 usr/
+ 9847149 lrwxr-xr-x@   1 root  wheel    11  7 Oct  2015 var@ -> private/var
+
+### Note that the numbers for "." and ".." are the same in the root. root is its own
+### parent. Now, we'll go to /usr/bin ...
+
+peters43:/$ cd /usr/bin
+peters43:/usr/bin$ ls sort
+16273465 -rwxr-xr-x  1 root  wheel  57984  3 Dec  2015 sort*
+peters43:/usr/bin$ ls grep
+16273182 -rwxr-xr-x  1 root  wheel  33728  3 Dec  2015 grep*
+
+### And we find that it contains the sort and grep commands that we used earlier. 
+### Here's a tip: You can use [] to specify particular letters you want included,
+### in addition to using * as a wildcard. "*" means "any number of characters of
+### any type." So the command below is looking for all files that start with 
+### the letters s OR b, followed by an i, followed by any number of other characters.
+
+peters43:/usr/bin$ ls [sb]i*
+16273041 -rwxr-xr-x   1 root  wheel   18128  3 Dec  2015 biff*
+16273042 -rwxr-xr-x   1 root  wheel   45568  3 Dec  2015 binhex*
+ 9828807 -rwxr-xr-x  35 root  wheel     811 23 Aug  2015 binhex.pl*
+ 9828808 -r-xr-xr-x   1 root  wheel    3941 23 Aug  2015 binhex5.18.pl*
+16273043 -rwxr-xr-x   1 root  wheel   18176  3 Dec  2015 bison*
+ 9828810 -rwxr-xr-x   1 root  wheel    1958 26 Aug  2015 bitesize.d*
+ 9829555 -rwxr-xr-x   1 root  wheel    1603 26 Aug  2015 sigdist.d*
+16273442 -rwxr-xr-x   1 root  wheel  104320  3 Dec  2015 sips*
+16273443 -rwxr-xr-x   1 root  wheel   18176  3 Dec  2015 size*
+
+### python, however, isn't installed in /usr/bin. It is in /usr/local/bin. /usr/bin
+### contains tools that are standard for unix. /usr/local/bin includes tools that
+### have been installed on this particular machine.
+
+peters43:/usr/bin$ cd /usr/local/bin
+peters43:/usr/local/bin$ ls python*
+1170202 lrwxr-xr-x  1 peters43  admin  35  9 May  2015 python3@ -> ../Cellar/python3/3.4.3/bin/python3
+1170203 lrwxr-xr-x  1 peters43  admin  42  9 May  2015 python3-config@ -> ../Cellar/python3/3.4.3/bin/python3-config
+1170204 lrwxr-xr-x  1 peters43  admin  37  9 May  2015 python3.4@ -> ../Cellar/python3/3.4.3/bin/python3.4
+1170205 lrwxr-xr-x  1 peters43  admin  44  9 May  2015 python3.4-config@ -> ../Cellar/python3/3.4.3/bin/python3.4-config
+1170206 lrwxr-xr-x  1 peters43  admin  38  9 May  2015 python3.4m@ -> ../Cellar/python3/3.4.3/bin/python3.4m
+1170207 lrwxr-xr-x  1 peters43  admin  45  9 May  2015 python3.4m-config@ -> ../Cellar/python3/3.4.3/bin/python3.4m-config
+
+### But this doesn't exactly answer how we use these tools. The tools are in 
+### particular directories (/usr/local/bin, /usr/bin, etc.) and I put them
+### into my PATH variable. echo prints the value of a variable or string:
+
+peters43:/usr/local/bin$ echo $PATH
+/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin:/usr/texbin:/Library/TeX/Root/bin/universal-darwin:/Users/peters43/bin
+
+### So we see that the shell really is a programming environment. There's a 
+### variable to prove it.
+
+### So far, we've only looked at text files. But executables aren't (usually) text. 
+### We can write our own tools, using C, perl, or Python, and then designate them 
+### to be executable.
+
+peters43:/usr/local/bin$ cd ~/courses/209/lectures/w1/ex/
+peters43:~/courses/209/lectures/w1/ex$ ls
+total 40
+41355201 drwxr-xr-x  8 peters43  staff  272  2 Jan 13:55 ./
+41321552 drwxr-xr-x  4 peters43  staff  136  2 Jan 09:41 ../
+41371069 -rw-r--r--  1 peters43  staff  559  2 Jan 13:55 directory_contents.txt
+41368261 -rw-r--r--  1 peters43  staff  124  2 Jan 13:13 faculty.txt
+41368269 -rw-r--r--  1 peters43  staff    0  2 Jan 13:14 faculty_copy.txt
+41371066 -rw-r--r--  1 peters43  staff  124  2 Jan 13:54 faculty_sorted.txt
+41355199 -rw-r--r--  1 peters43  staff   76  2 Jan 09:28 hello.c
+41355265 -rw-r--r--  1 peters43  staff  156  2 Jan 09:29 loopy.c
+
+### I'm using gcc to compile my C code into an executable. 
+
+peters43:~/courses/209/lectures/w1/ex$ gcc hello.c 
+
+### By default, since I didn't specify an output, gcc puts the output
+### in a.out. (The alternative would be to print binary data, and that would 
+### be ugly.)
+
+peters43:~/courses/209/lectures/w1/ex$ ./a.out 
+Hello, world!
+peters43:~/courses/209/lectures/w1/ex$ cat hello.c 
+#include <stdio.h>
+
+int main() {
+  printf("Hello, world!\n");
+  return 0;
+}
+peters43:~/courses/209/lectures/w1/ex$ vi a.out 

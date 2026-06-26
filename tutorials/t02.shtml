@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html>
+<!--#include virtual="../head.shtml" -->
+<body>
+  <!--#include virtual="../navbar.html" -->
+  <script>var p = document.getElementById("menu.tutorials"); p.className = "nav-item active";</script>
+  <main role="main" class="container">
+    <h1 class="mt-5">Tutorial 2: Shell and C Arrays</h1>
+    <!--#set var="DEADLINE" value="10 p.m. on Friday, January 17, 2020" -->
+    <!--#include virtual="./deadline.shtml" -->
+
+<h2>Introduction</h2>
+
+<p>
+    The purpose of this tutorial is to investigate the use of 
+    arrays in two contexts. First, you'll demonstrate your shell 
+    scripting knowledge by building a script that uses loops, 
+    conditionals, and arrays to pretty print your marks, and 
+    second, you'll use <code>gdb</code> to debug C code that
+    uses arrays and pointers. 
+</p>
+
+<p>
+    This is a fairly long tutorial, so you may need to allocate 
+    some extra time throughout the week to complete it. 
+</p>
+
+<div class="alert alert-danger" role="alert">
+<i class="fas fa-exclamation-triangle"></i> <strong>Note:</strong> <br/>
+<p>
+    This tutorial will be difficult to complete on macOS, since 
+    it ships with <code>clang</code> (LLVM front-end) instead of 
+    <code>gcc</code>, and hence comes with the <code>lldb</code> 
+    debugger instead of <code>gdb</code>. Note that while the
+    <code>gcc</code> and <code>gdb</code> commands exist, 
+    they are actually aliased to <code>lldb</code> and
+    <code>clang</code> (recall aliases from Tutorial 1).
+</p>
+
+<p>
+    It may be more practical to 
+    complete this tutorial using a lab PC (either in person or by using 
+    <code>ssh</code> to remotely log in from your laptop or home PC: 
+    <a href="./t01.shtml">see Tutorial 1 for instructions on how to do so</a>). 
+</p>
+
+<p>
+    Alternatively, you may us <code>brew</code> try to install 
+    <code>gdb</code> (and also <code>gcc</code>) on your Mac.
+    <a href="https://brew.sh/">See these instructions</a> 
+    for installing Brew. Subsequently, you can install <code>gdb</code>
+    by running <kbd>brew install gdb</kbd>. If you need help with this, 
+    please keep it under consideration that most of us are not 
+    familiar with macOS, so you may need to get help from your 
+    TAs or classmates who are.
+    After installing <code>gdb</code> and/or <code>gcc</code>, 
+    you may still need to ensure that the path 
+    to your Brew-installed <code>gdb</code> or <code>gcc</code> 
+    take higher precedence 
+    than the aliases to <code>lldb</code> and <code>clang</code>).
+    If you prefer, you may also spend some time getting used to 
+    <code>lldb</code>.
+</p>
+
+</div>
+
+<h2>Walkthrough</h2>
+
+<p>
+    Start by preparing your repository for the week. Do a 
+    <kbd>git pull</kbd>, which should create your <code>t02</code> 
+    directory that you will use for submitting your work for this 
+    tutorial.
+</p>
+
+<h3>Bash Scripting with Loops, Conditionals, and Arrays</h3>
+
+<p>
+    In your <code>t02</code> directory, use <code>touch</code> to 
+    create a file named <code>pp_marks.sh</code>. Then, run 
+    <kbd>chmod u+x pp_marks.sh</kbd> (see lecture 1 slides and/or 
+    <kbd>man chmod</kbd> for more information) to make your script 
+    executable. The goal of this section is to turn your new file 
+    into a bash script that pretty prints your tutorial and 
+    assignment marks.
+</p>
+
+<p>
+    First, some background. You'll end up having 11 tutorials 
+    (in directories <code>t01</code> to <code>t11</code>) and 
+    4 assignments (in directories <code>a1</code> to <code>a4</code>). 
+    When we mark your tutorials and assignments, we will place 
+    a file named <code>feedback.txt</code> into the directory that 
+    contains comments and a mark. The last line of this file will 
+    always be in the format <code>score / max_score</code>.
+</p>
+
+<p>
+    Your script will need to 
+    <a href="http://tldp.org/LDP/Bash-Beginners-Guide/html/sect_09_01.html">loop</a> 
+    through your tutorial and assignment directories. 
+    In each directory, it will extract your score and the 
+    max possible score, display those scores, and update 
+    a running tally. After printing all of the tutorial and 
+    assignment scores, it'll print totals. If a tutorial or 
+    assignment is missing, a placeholder line will be printed. 
+    For example, here is the output of my script being run on 
+    a folder with some, but not all, of the expected directories: 
+</p>
+
+<pre>
+<samp>$</samp> <kbd>cd ~/209_repo</kbd>
+<samp>$</samp> <kbd>ls</kbd>
+<samp>a1  a2  t01  t02  t03  t04  t06
+$</samp> <kbd>t02/pp_marks.sh</kbd>
+<samp>a1: 25 / 30
+a2: - / -
+a3: - / -
+a4: - / -
+
+t01: 3 / 3
+t02: 3 / 3
+t03: 2 / 3
+t04: 3 / 3
+t05: - / -
+t06: 3 / 3
+t07: - / -
+t08: - / -
+t09: - / -
+t10: - / -
+t11: - / -
+
+Assignment Total: 25 / 30
+Tutorial Total: 14 / 15
+$</samp>
+</pre>
+
+<p>
+    In the text above, <code>$</code> designates a prompt. 
+    Note that the script printed <code>- / -</code> if a directory 
+    is missing. It prints the same thing if the directory is 
+    present but does not contain a <code>feedback.txt</code> 
+    file. Marks are simply summed. There is no attempt to calculate 
+    a percentage or to weight assignments or tutorials.
+</p>
+
+<h3>Tips for the Script</h3>
+
+<p>
+    This is a tall order, so how should you start? First, 
+    I would extract a grade from a single file. Here is some 
+    code to get you started: 
+</p>
+
+<pre>
+#!/bin/bash
+
+grade=`cat feedback.txt | tr -d [:blank:]`
+
+IFS='/' read -ra grArray <<< "$grade"
+score=${grArray[0]}
+max=${grArray[1]}
+
+echo $score
+echo $max
+</pre>
+
+<p>
+    There are both some familiar features and some new features 
+    in the script above. First, check out the first line. That
+    line is necessary, as it tells the OS how to execute the 
+    script. Second, look at the last two lines: this script 
+    just displays its result using <code>echo</code>. You will 
+    want to change the output to match the expected output. 
+    Next, check out the use of backticks on the line that 
+    assigns to <code>grade</code>. The backticks mean 
+    "execute this command, and capture the output", which 
+    we then save as a string into the <code>grade</code> 
+    variable. Look up <code>cat</code> and <code>tr</code> 
+    as necessary, or try them out to see what they do. 
+    Finally, something very new: the middle block introduces 
+    the use of 
+    <a href="http://tldp.org/LDP/abs/html/arrays.html">bash arrays</a>.
+</p>
+
+<p>
+    <code>IFS</code> is a standard bash variable that stands for 
+    "internal file separator". That first line uses it to translate 
+    the contents of the <code>grade</code> variable into an array 
+    variable named <code>grArray</code> by splitting the line 
+    (which is in the format <code>grade / max_score</code>) on 
+    the delimiter <code>/</code>. The line 
+    <a href="http://tldp.org/LDP/abs/html/x17837.html">uses a "here string" to get input from the variable</a>.
+</p>
+
+<p>
+    The next two lines index into the array to get the first 
+    and second items: the score and max score, respectively.
+</p>
+
+<p>
+    That example does a lot of the work for processing a 
+    single file. One thing is missing: you'll need to modify
+    the script to extract the last line of the feedback file. 
+    (Hint: look up <code>tail</code>.)
+</p>
+
+<p>
+    Once you get your script working for a single file that 
+    you know exists, it's time to make it work for multiple 
+    files. <a href="http://tldp.org/HOWTO/Bash-Prog-Intro-HOWTO-8.html">You can enclose your previous code in a function</a>, 
+    if you like. In any case, that code will need to be called in a 
+    <a href="http://tldp.org/LDP/Bash-Beginners-Guide/html/sect_09_01.html">for loop</a>. 
+    Here is an example of a loop over an (implied) array of strings:
+</p>
+
+<pre>
+<samp>$</samp><kbd> for d in t01 t02 t03; do</kbd>
+<samp>></samp><kbd>     echo $d</kbd>
+<samp>></samp><kbd> done</kbd>
+<samp>t01
+t02
+t03
+$</samp>
+</pre>
+
+<p>
+    You can use that loop to iterate over a set of 
+    directories&mdash;but make sure to check that the directories 
+    (and the required files in them) exist before you try to access 
+    a file in them! You'll also need to keep a running tally of scores, 
+    which means that you need bash to have integers. The 
+    <code>declare</code> statement will be helpful here. For example, 
+    the following demonstrates how to declare a variable that is 
+    treated like an integer:
+</p>
+
+<pre>
+<samp>$</samp> <kbd>declare -i x=0</kbd>
+<samp>$</samp> <kbd>x=$x+1</kbd>
+<samp>$</samp> <kbd>echo $x</kbd>
+<samp>1
+$</samp>
+</pre>
+
+<div class="alert alert-warning" role="alert">
+    Finally, <strong>please remember that your code is being marked 
+    using tests, so it's important that your output matches exactly</strong>. 
+    Please check your capitalization, for example, and make sure 
+    there are blank lines in between the sections of output. 
+    If you would like to extend your script (perhaps by using 
+    <code>bc</code> to calculate your actual score), then please 
+    do so in a separate file, so we don't grade a later version.
+</div>
+
+<h3>Using gdb</h3>
+
+<p>
+  It's common for programmers to debug using <code>printf()</code>, 
+  at least for simple issues, but debugging with <code>printf()</code> 
+  statements will become increasingly difficult as we delve into 
+  systems programming. Now is the time to learn how to use a common 
+  C debugger, <code>gdb</code>. It'll seem hard at first, but you'll 
+  be thankful for these skills at the end of this course and in 
+  courses like CSC369.
+</p>
+
+<p>
+  To demonstrate that you've completed the tutorial, you'll 
+  submit a <code>script</code> record of your interactions 
+  on the command line to your git repository. Try it out by 
+  running <kbd>script</kbd>, followed by a few other UNIX commands 
+  (many examples in the week 1 slides). Then, after you're done, 
+  run <kbd>exit</kbd>. This will stop recording your actions and 
+  save them in a file named <code>typescript</code>. Check out 
+  <kbd>man script</kbd> to see how to pass a file name as an 
+  argument to override this default name.
+</p>
+
+<p>
+  The file <code>overflow.c</code> in your <code>t02</code> directory 
+  contains a program for you to explore. You will change the 
+  values of <code>SIZE</code> and <code>OVERFLOW</code> to 
+  see what happens when <code>OVERFLOW</code> is bigger than 
+  <code>SIZE</code>.
+</p>
+
+<p>
+   First, read through the program and explain what it is doing 
+   aloud to yourself (or to some unsuspecting bystander, 
+   if you prefer). Notice that we are printing the addresses 
+   of the variables. The purpose of doing that is to show where 
+   the variables are placed in memory.
+</p>
+
+<p>
+  Next, compile and run the program as shown here:
+</p>
+
+  <pre>
+<samp>$</samp> <kbd>gcc -Wall -g -o overflow overflow.c</kbd>
+<samp>$</samp> <kbd>./overflow</kbd>
+  </pre>
+
+<p>
+  Don't miss the <code>-g</code> flag or <code>gdb</code> won't 
+  work properly. Check the values of <code>before</code>, 
+  <code>a</code>, and <code>after</code>&mdash;did the program 
+  behave as expected?
+</p>
+
+<p>
+    Now, change the value of <code>OVERFLOW</code> to 5. 
+    Compile the program and run it again. What changed? 
+    (If nothing changed&mdash;if everything still seems 
+    okay&mdash;then try this code on a lab machine. It 
+    depends on how the variables are placed into memory 
+    by the compiler, and your compiler may be doing 
+    something we didn't expect.)
+</p>
+
+<p>
+    Let's see why variables other than <code>a</code> 
+    were affected. The next step is to run the program 
+    in <code>gdb</code>. Here are a list of the 9 need-to-know 
+    commands in <code>gdb</code>.
+</p>
+
+<table class="table">
+	  <thead class="thead-dark"><tr>
+			  <th scope="col">Command</th>
+			  <th scope="col">Description</th>
+	  </thead>
+  <tbody>
+<tr> <td> <kbd>gdb program</kbd> </td><td> start <kbd>gdb</kbd> on this executable <kbd>program</kbd></td> </tr>
+<tr> <td> <kbd>list [n]</kbd></td><td> list some of the code starting from line <kbd>n</kbd> or from
+			  the end of last call to <kbd>list</kbd></td> </tr>
+<tr> <td> <kbd>break [n OR fun_name]</kbd></td><td> set a breakpoint either at line <kbd>n</kbd>
+ or at the beginning of the function <kbd>fun_name</kbd></td> </tr>
+<tr> <td> <kbd>run [args]</kbd></td><td> begin execution with these command-line arguments</td> </tr>
+<tr> <td> <kbd>next</kbd> </td><td> execute one line</td> </tr>
+<tr> <td> <kbd>print variable OR expression</kbd></td><td> print the value once</td> </tr>
+<tr> <td> <kbd>display variable OR expression</kbd></td><td> print the value after every gdb command</td> </tr>
+<tr> <td> <kbd>continue</kbd></td><td> execute up to the next breakpoint</td> </tr>
+<tr> <td> <kbd>quit</kbd></td><td> bye-bye!</td> </tr>
+</tbody>
+</table>
+
+  <br/>
+
+<p>
+    Try this out on your overflow executable. 
+    Start by typing <kbd>gdb overflow</kbd>. 
+    Set a breakpoint in <code>main()</code> by typing 
+    <kbd>break main</kbd>, and then start the program 
+    running by typing <kbd>run</kbd>. You want to watch 
+    the values of a few variables, so use <kbd>display</kbd> 
+    to show the value of some variables. Do this for 
+    each variable you want to watch. Step through the program 
+    one line at a time using <kbd>next</kbd> (after 
+    you enter <kbd>next</kbd> once, you can execute another 
+    line by just hitting <kbd><kbd>Enter</kbd></kbd>. Keep
+    a close eye on the first element in <code>after</code>, 
+    and notice the final value of <code>a</code>. When 
+    the program termintaes, type <kbd>quit</kbd> to 
+    leave <code>gdb</code>.
+</p>
+
+<p>
+    Now, start <code>gdb</code> again but before you start, 
+    use <code>script</code> to record your interaction. 
+    (You'll submit this script.) This time make sure you 
+    watch the array <code>after</code>. It is pretty slow 
+    to step through every line of your code, so use <kbd>list</kbd> 
+    to find the line number of the <code>for</code> loop 
+    where we start to assign values to the array. Set a 
+    breakpoint on that line number and then use <kbd>continue</kbd> 
+    to jump to the breakpoint you just set. Use <kbd>next</kbd> 
+    to step through one line at a time. Watch the value of 
+    <code>after[0]</code> carefully. When it changes, print 
+    its address. (Yes, you can do <kbd>print &amp;(after[0])</kbd> 
+    inside gdb.) Then, print the address of <code>a[4]</code>. 
+    Does that help you understand what happened? Exit 
+    <code>gdb</code>. (Say <kbd><kbd>y</kbd></kbd> when it 
+    asks if you want to Quit anyway.) Then exit <code>script</code>. 
+    Rename your typescript file to <code>gdb_example.txt</code> 
+    and add it to your repository.
+</p>
+
+<p>
+    The last step is to try to make your program crash. 
+    (I had to set <code>OVERFLOW</code> to something like 
+    <code>5000</code> to get it to crash with a segfault.) 
+    Once you've found a value for <code>OVERFLOW</code> 
+    that produces a segfault, run the program in <code>gdb</code> 
+    without setting a breakpoint so that it runs automatically 
+    until the crash. Then, use the <code>backtrace</code> 
+    command and the <code>print</code> command to investigate 
+    the value for <code>i</code>. Try <kbd>backtrace full</kbd> 
+    for even more helpful information. You don't need to record 
+    what you're doing on this step. We just want you to see 
+    the <code>backtrace</code> command.
+</p>
+
+<h3>Submitting Your Work</h3>
+
+<p>
+    To submit, make sure there is a <code>t02</code> directory 
+    in your repository, that it contains a copy of 
+    <code>pp_marks.sh</code> and <code>gdb_example.txt</code>, 
+    and that everything has been pushed. 
+    (You can use <kbd>git status</kbd> to check if there are 
+    any uncommitted files in your repository.) As before, 
+    please don't push files you don't need. Use a 
+    <code>.gitignore</code> to identify intermediate 
+    files that shouldn't be tracked.
+</p>
+
+<p>
+    We'll be working with dynamic memory next week and 
+    will introduce the tool <code>valgrind</code>.
+</p>
+
+<div class="alert alert-success" role="alert">
+        <p><b>Important</b>: Your script must be able to run from the root directory of any CSC209 git repository. Here are some examples of things that you should NOT do:</p>
+        <ul>
+                <li>If your program only works from your home directory (i.e., hard-coded with your UTORID in the file path), we will not be able to run it, and your script will receive a grade of zero. We do not have access to your home directory, and if your script doesn't run because of that (or because of any other reason), we won't be manually fixing the script to allow us to run it.</li>
+                <li>Your program also shouldn't assume that it is being run from inside the <code>t02</code> directory. It will be run from within the root directory of the git repo, as shown in the example run.</li>
+                <li>Your program also shouldn't assume that the git repository is located in the home (<code>~</code>) directory.</li>
+                <li>For the correct way of doing this, see the Week 1 reading materials (either the Lecture 1 slides or <kbd>man intro</kbd>) to find out how to access your <strong>current directory</strong> from within your bash script. <strong>Use relative file paths.</strong></li>
+                <li>Pay attention to whitespaces: Both for the auto-tester, but also because Bash cares about whitespaces too (extra/missing spaces can break your script).</li>
+        </ul>
+</div>
+    <section>
+      <div class="page-header">
+        <a name="comments"></a><h2>Comments</h2>
+      </div>
+      <div id="discourse-comments" class="span12">
+        <p>
+          Note: If the comments fail to load, try refreshing the page or
+          <a href="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/tutorials/t02.shtml">
+            logging into the discussion board through this link
+          </a>.
+        </p>
+      </div>
+    </section>
+
+    <!--#include virtual="../footer.html" -->
+  </main><!-- /.container -->
+  <script type="text/javascript">
+    var DiscourseEmbed = {
+      discourseUrl: 'https://mcsapps.utm.utoronto.ca/forum/',
+      topicId: 3998
+    };
+
+    function loadComments() {
+      var d = document.createElement('script'); d.type = 'text/javascript'; d.async = true;
+      d.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(d);
+    }
+
+  </script>
+
+  <!-- Begin Furkan's hack: Using a hidden iframe, automatically
+  log the user into Discourse before attempting
+  to load the comments. This will only work if this page has
+  Shibboleth authentication enabled through the .htaccess file -->
+
+  <iframe src="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/load_comments.html" style="display:none;" width="0" height="0" name="forumlogin"></iframe>
+
+  <script>
+    window.addEventListener("message", function(event) {
+      if (event.origin != "https://mcs.utm.utoronto.ca") {
+        console.log("Ignoring cross-origin message from Discourse SSO iframe: " + event.origin);
+        return;
+      }
+
+      console.log("Received same-origin message from Discourse SSO iframe: loading comments.");
+      loadComments();
+    });
+  </script>
+
+  <!-- End Furkan's hack -->
+
+</body>
+</html>

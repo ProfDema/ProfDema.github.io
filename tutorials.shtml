@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<!--#include virtual="./head.shtml" -->
+<body>
+  <!--#include virtual="navbar.html" -->
+  <script>
+    var p = document.getElementById("menu.tutorials");
+    p.className = "nav-item active";
+  </script>
+  <main role="main"
+        class="container">
+    <div class="row">
+      <div class="col-sm-4">
+        <h1 class="mt-5"></h1>
+        <ul class="list-group">
+          <a href="./tutorials/t01.shtml" class="list-group-item list-group-item-action list-group-item-secondary">Week 1: The Shell</a>
+          <a href="./tutorials/t02.shtml" class="list-group-item list-group-item-action list-group-item-secondary">Week 2: Bash and C Tutorials</a>
+          <a href="./tutorials/t03.shtml" class="list-group-item list-group-item-action list-group-item-secondary">Week 3: Pointers and Reading from Standard Input</a>
+          <a href="./tutorials/t04.shtml" class="list-group-item list-group-item-action list-group-item-secondary">Week 4: Valgrind and Strings</a>
+          <a href="./tutorials/t05.shtml" class="list-group-item list-group-item-action list-group-item-secondary">Week 5: Binary I/O</a>
+          <a href="./tutorials/t06.shtml" class="list-group-item list-group-item-action list-group-item-secondary">Week 6: Make</a>
+          <a href="./tutorials/t07.shtml" class="list-group-item list-group-item-action list-group-item-secondary">Week 7: Forking</a>
+          <a href="./tutorials/t08.shtml" class="list-group-item list-group-item-action list-group-item-secondary">Week 8: Pipes, Fork, Exec, and Dup2</a>
+          <a href="./tutorials/t09.shtml" class="list-group-item list-group-item-action list-group-item-secondary">Week 9: Signals</a>
+          <a href="./tutorials/t10.shtml" class="list-group-item list-group-item-action list-group-item-secondary">Week 10: Sockets</a>
+          <a href="./tutorials/t11.shtml" class="list-group-item list-group-item-action list-group-item-secondary">Week 11: Select</a>
+        </ul>
+      </div>
+      <div class="col-sm-8">
+        <h1 class="mt-5">Tutorials Overview</h1>
+          <p>
+            During tutorial times, the TAs will lead a brief 
+            discussion of the week's material and then will 
+            be available for questions about PCRS, the lab 
+            exercises, or assignments. In many weeks, the 
+            lab material will be posted online and/or on PCRS, 
+            but some weeks, the labs may need to be completed 
+            in person in the tutorial and will be described 
+            in handouts. These handouts will be linked in 
+            the table to the left.
+          </p>
+      </div>
+    </div><!-- /.row -->
+  </main><!-- /.container -->
+  <!--#include virtual="./footer.html" -->
+</body>
+</html>

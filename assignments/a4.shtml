@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html>
+<!--#include virtual="../head.shtml" -->
+<body>
+  <!--#include virtual="../navbar.html" -->
+  <script>var p = document.getElementById("menu.assignmentss"); p.className = "nav-item active";</script>
+  <main role="main" class="container">
+  <h1 class="mt-5">Assignment 4: <img src="./a4/pogchamp.png"> Chat Server and Client <img src="./a4/jebaited.png"></h1>
+    <!--#set var="DEADLINE" value="10 p.m. on Wednesday, April 1, 2020" -->
+    <!--#include virtual="./deadline.shtml" -->
+    <h2>Introduction</h2>
+
+<p>
+  The goal of this assignment is to extend the chat server and client
+  from Tutorial 11 with new features. The most exciting feature will
+  be support for emotes. This assignment also asks you to demonstrate
+  a number of the  learning outcomes from earlier in the course: ability
+  to learn about systems utilities independently, use of file  operations,
+  use of <tt>fork</tt>, etc. That is, this assignment is the capstone
+  of this course.
+</p>
+
+<p>
+  The only new starter code provided for this
+  assignment is: (1) A new <tt>socket.h</tt> with updates to the macro
+  definitions. (2) A new <tt>chat_server.c</tt> that turns off <code>SIGPIPE</code>
+  (the rest of the file is identical to the Tutorial 11 starter code).
+  Aside from that, your solution to Tutorial 11 will be your starter code for Assignment 4.
+</p>
+
+<h2>Reliability and Security</h2>
+
+<p>
+  The remarks mentioned in Tutorial 11 under the
+  "A Note on Software Quality, Reliability, and Security" heading apply to this assignment as well.
+  In summary, both the client and server must validate all protocol messages
+  received. If your client encounters an invalid protocol message, it should terminate.
+  If your server encounters an invalid protocol message from a client,
+  it should disconnect that client and continue serving the other clients.
+</p>
+
+<h2>Recommendation: Testing Client from Another Computer</h2>
+
+<p>
+  We encourage you (but we are not marking this for completion) to implement <strong>optional</strong>
+  command-line arguments in the client to allow you to specify a hostname or IP address to connect to.
+  If no command-line arguments are provided, your program should fall back to using the default
+  host (localhost, or 127.0.0.1) and port (specified in the Makefile). You should be able to implement
+  this with just a few lines of code&mdash;see <code>randclient.c</code> to see how it is done there
+  (word of warning, though: <code>randclient.c</code> exits if no command-line arguments are
+  provided, instead of falling back to a default hostname/port.
+</p>
+
+<h2>New Requirements for your Chat Program</h2>
+
+<p>
+  This assignment adds a number of features to your Tutorial 11: the addition
+  of an admin role, restrictions on usernames, the addition of emotes to the chat,
+  and an updated protocol to enable these new features.
+</p>
+
+<h3>An Updated Chat Protocol</h3>
+
+<p>
+  To support the new features, we will need to update our chat protocol
+  with a new message format. All protocol messages sent by your client
+  must follow the format:
+</p>
+
+<pre>
+PROTO_MSG_CODE USER_MESSAGE CRLF
+</pre>
+
+<p>
+  <code>PROTO_MSG_CODE</code> is a single character that serves to
+  identify the type of message that the client is sending:
+  <ul>
+    <li>
+      Message code <code>0</code> (the ASCII character 0) indicates
+      a "kick" command from the chat server administrator. In this case,
+      <code>USER_MESSAGE</code> is the user name of the client that
+      should be kicked from the server.
+    </li>
+    <li>
+      Message code <code>1</code> (the ASCII character 1) indicates
+      that <code>USER_MESSAGE</code> is a text message
+      consisting of a sequence of 0 to <code>MAX_USR_MSG</code>
+      printable ASCII characters. This is followed by a <code>CRLF</code> sequence.
+      If the client is sending their username upon connecting to the server,
+      the message code is still <code>1</code> but <code>USER_MESSAGE</code>
+      must be a user name consisting of 0 to <code>MAX_NAME</code> characters.
+      This functionality should have been completed in the tutorials.
+    </li>
+    <li>
+      Message code <code>2</code> (the ASCII character 2) indicates that
+      <code>USER_MESSAGE</code> is an emote, consisting of a sequence of
+      up to <code>MAX_IMG_LEN</code>
+      bytes that compose a Base64-encoded JPEG file (explained later).
+      As required by the protocol, these bytes are followed by a <code>CRLF</code> sequence.
+    </li>
+  </ul>
+</p>
+
+<p>
+  All protocol messages sent by your server be in the format:
+</p>
+
+<pre>
+PROTO_MSG_CODE USER_NAME SPACE USER_MESSAGE CRLF
+</pre>
+
+<p>
+  All of the fields in this format have already been described either above or in the
+  Tutorial 11 instructions. The only change from Tutorial 11 to Assignment 4
+  is the addition of the <code>PROTO_MSG_CODE</code> field. Note that there is
+  no space between <code>PROTO_MSG_CODE</code> and <code>USER_NAME</code>.
+</p>
+
+<h3>Admin</h3>
+
+<p>
+  One user connected to the server will be designated the admin, and that user has the
+  ability to kick (disconnect) any user from the server.
+</p>
+
+<p>
+  The admin is always the user that has been connected for the longest period of time.
+  As a result,  the first client to connect to the server is the first admin. If the
+  first client disconnects from the server
+  at some point, the next most "senior" user becomes the admin (i.e., the next
+  user that has been around the longest). This method is simpler than it sounds.
+  (Hint: You don't need to keep track of time.)
+</p>
+
+<p>
+  To kick a user, the admin user can type the following command into the client:
+  <kbd>.k username</kbd>. In accordance with the protocol message format,
+  the resulting protocol message that the client sends
+  to the server will be <code>0username\r\n</code>. The server should <b>ignore</b>
+  any kick commands from non-admin users. (To reiterate: A non-admin issuing a kick
+  should not be considered an invalid message; it should just be ignored.)
+</p>
+
+<h3>Duplicate Names</h3>
+
+<p>
+  In the assignment 4 chat application, no two users can share the same
+  user name, and they may not pick the all-caps username <code>SERVER</code>
+  as their username. If a new user attempts to log in with an invalid username
+  (e.g., <code>SERVER</code>, an oversized username, or one that is already
+  taken), the server should respond with the ASCII sequence
+  <code>1SERVER Username invalid or already taken.\r\n</code> and disconnect the client.
+</p>
+
+<h3>Base64 Encoding of Emotes</h3>
+
+<p>
+  Base64 is a subset of ASCII. Your chat client will need to make use of the
+  UNIX <code>base64</code> utility to encode and decode data to and from Base64.
+  As explained in <kbd>man base64</kbd>, this utility follows the
+  <a href="https://tools.ietf.org/html/rfc4648#section-5">RFC 4648 variant</a> of
+  Base64, which uses the characters <code>A-Z</code>, <code>a-z</code>,
+  <code>0-9</code>, <code>-</code>, and <code>_</code>. If necessary,
+  <code>=</code> is used at the end as a padding character
+  to ensure that the total number of characters in the encoded data
+  is always a multiple of 4.
+</p>
+
+<p>
+  Base64 is very popular across many applications, which is why you can find
+  <a href="https://www.freeformatter.com/base64-encoder.html">many online tools</a>
+  that can encode/decode Base64. Its appeal is that it allows you to take any
+  data and convert it into a form that can be printed as human-readable text,
+  without any unprintable or control characters. E-mail attachments are
+  sent in Base64-encoded form, for example. It is also a popular way of storing
+  other data such as <a href="https://github.com/falaca.keys">cryptographic keys</a>
+  (that "trick" works for any Github account set up with SSH public keys),
+  since it makes it easier to copy them around or print them out for backup purposes.
+</p>
+
+<p>
+  The disadvantage of Base64 is that any encoded data will be about 37% larger
+  than the original unencoded data length. The reason why is fairly straightforward:
+  Since the Base64 encoding process restricts the value of each character to
+  one of 64 printable characters out of the 256 possible values that an
+  8-bit character can normally hold, a greater number
+  of characters are required to represent the same data. If that confuses you,
+  think about it this way: Why is it that the number <code>255</code> can
+  be printed with 3 characters in decimal representation, but its binary
+  equivalent (<code>11111111</code>) requires 8 characters to print,
+  even though both the decimal and binary values represent the exact same number?
+</p>
+
+<p>
+  For our chat protocol, the appeal of using Base64 is that the encoded
+  image will never inadvertently contain any control characters, such as
+  a <code>CRLF</code> sequence (i.e., <code>0x0D0A</code> in hexadecimal,
+  or <code>\r\n</code> when represented as control characters)
+  that your server or client would interpret
+  as a protocol message terminator. In contrast, the original JPEG file may
+  inadvertently contain a <code>CRLF</code> sequence or other control characters
+  such as a <code>0x00</code> byte (which might be interpreted as a string terminator
+  by some string-handling functions in C).
+</p>
+
+<h3>Emote Commands in Chat</h3>
+
+<p>
+  See the screenshot below for what your final result should look like.
+</p>
+
+<img src="./a4/emotes_screenshot.jpg">
+
+<p>
+  The implementation requirements for sending an emote are as follows:
+</p>
+
+<ol>
+  <li>
+    Your program should not, under any circumstances, use absolute file paths,
+    either for opening any files or for executing any other programs. Make use of
+    relative file paths for accessing files in your emotes directory, and use
+    an <code>exec()</code> function that respects the <code>PATH</code>
+    environment variable when calling the <code>base64</code> or <code>catimg</code>
+    utility.
+  </li>
+  <li>
+    When the user inputs <code>.e EMOTE_NAME</code> into the client, the client
+    will encode the file <code>EMOTE_NAME.jpg</code> located in the
+    <code>emotes</code> subdirectory of your <code>a4</code>
+    directory, as follows:
+  </li>
+  <ol>
+    <li>
+      Your client should write the contents of <code>EMOTE_NAME.jpg</code> to
+      <code>stdin</code> of the <code>base64</code> utility, which you must execute.
+    </li>
+    <li>
+      When executing the <code>base64</code> utility, use the appropriate command-line
+      argument(s) to ensure that no newline characters are inserted into the
+      Base64-encoded data. By default, it wraps the data into 76-character lines, and
+      we don't want that.
+    </li>
+    <li>
+      Your client should read the resulting Base64-encoded JPEG image from the
+      <code>stdout</code> of the <code>base64</code> utility.
+    </li>
+  </ol>
+  <li>
+      If the specified jpg is not found in the <code>emotes</code> subdirectory, the
+      client should print the message: "Error: Emote image not found" to <code>stdout</code>,
+      <em>not</em> send a message on the socket, and then continue as normal.
+  </li>
+</ol>
+
+<p>
+  You must use <code>fork()</code>, <code>pipe()</code>, and <code>dup2()</code>
+  to correctly complete the task above. We will not tell you the exact sequence of steps
+  to follow, since we want you to be able to work through that on your own.
+</p>
+
+<p>
+  The implementation requirements for receiving and displaying an emote are as follows:
+</p>
+
+<ol>
+  <li>
+    You must first decode the emote using the <code>base64</code>
+    utility. Your program should use <code>fork()</code>,
+    <code>pipe()</code>, and <code>dup2()</code> to write the Base64-encoded emote
+    to <code>stdin</code> of the <code>base64</code> utility (which needs to be
+    executed with the appropriate flag for decoding) and read back the original
+    JPEG image data that it outputs to <code>stdout</code>.
+  </li>
+  <li>
+    Use the <code>catimg</code> program to display the image on-screen. Use
+    the flag <code>-w80</code> to limit the width of the image (otherwise it will
+    use up the whole window). Unfortunately, <code>catimg</code> does not
+    accept input on <code>stdin</code>. Instead, it expects to be provided
+    with the file name of a JPEG image. However, we don't want to write anything
+    to disk, so we will use a <strong>named pipe</strong>. A named pipe,
+    also called a <strong>fifo</strong> in Linux (see <kbd>man 7 fifo</kbd>) is
+    very similar to a pipe, except that it is assigned a file name and can
+    therefore be opened by any program. Your client should create a named pipe
+    in the same directory as the client, called <code>emotepipe.jpg</code>,
+    with read and write permissions for the owner user (refer back to file
+    permissions from Week 1). Then, your client should write the JPEG
+    data to the pipe, and should execute the <code>catimg</code> program,
+    passing it <code>emotepipe.jpg</code> as a command-line argument.
+    The <code>catimg</code> program will then open the named pipe just like
+    it would open a regular file, and display its contents.
+  </li>
+</ol>
+
+<p>
+  A few notes:
+</p>
+
+<ul>
+  <li>
+    We have not covered the <code>mkfifo()</code> library function, either in
+    class or in PCRS. So you will need to learn about it by reading
+    <kbd>man 3 mkfifo</kbd>. Recall from slide 7 in the Week 1 lecture slides,
+    that one of the learning outcomes of this course is to be able to
+    "Read the man page of an unfamiliar system call or library function and
+    be able to understand and use it". This is your chance to demonstrate
+    to yourself that you have achieved this outcome!
+  </li>
+  <li>
+    The precise ordering of system/library calls necessary to complete the job
+    is for you to figure out (don't just assume that they are listed in the
+    correct order above).
+  </li>
+  <li>
+    You may run into some issues that need debugging,
+    e.g., your program may block when attempting to read from the named pipe
+    (this is a newly-written assignment, so try guessing why I think that).
+    If you encounter this issue or related issues,
+    refer to <kbd>man 3 mkfifo</kbd> and <kbd>man 7 fifo</kbd>,
+    and use <kbd>strace -f</kbd> to trace your program's
+    execution (make sure that you use the <kbd>-f</kbd> flag so that
+    it traces any forked processes as well). This should help you quickly
+    identify where and why your program is stuck.
+  </li>
+  <li>
+    Remember that both your client and server should validate all protocol
+    messages, and should avoid sending out any invalid messages. So for example,
+    your client should refuse to send emotes that (after encoding into Base64)
+    are larger than <code>MAX_IMG_LEN</code> (instead, print an error message
+    to inform the user that the image size was too large&mdash;do not send this
+    message to the server, though). Similarly, the server should
+    disconnect any misbehaving clients that do send an oversized image,
+    and the client should disconnect from any server that sends it an
+    oversized image. Test thoroughly. Python is your friend.
+  </li>
+</ul>
+
+</ol>
+
+<h2>Coding Guidelines</h2>
+<p>
+  You are free to implement your changes as you wish, as long as you do
+  not make any modifications to the <code>.h</code> files given, and perform
+  all your changes in the given <code>.c</code> files (i.e., do not submit
+  any new <code>.c</code> files, since we will not look at them). Again,
+  <strong>DO NOT</strong> modify the <tt>.h</tt> files.
+</p>
+
+<p>
+  <strong>DO</strong> use the macro constants defined in <tt>socket.h</tt>,
+  and assume that we may change them to different values when
+  testing your code.
+</p>
+
+<p>
+  You may find it convenient to update your <code>read_from_socket()</code>
+  function so that it returns <code>-1</code> if it detects an invalid
+  protocol message in the buffer after reading from the socket (e.g.,
+  if it sees that there is a text message longer than <code>MAX_USR_MSG</code>
+  bytes).
+</p>
+
+<h2>Submitting Your Work</h2>
+<p>
+  Verify that your <tt>chat_server.c</tt>, <tt>chat_client.c</tt>,
+  <tt>chat_helpers.c</tt>, and <tt>socket.c</tt>
+  source files have been added to your repository, committed, and
+  pushed by the deadline to get credit for the assignment.
+</p>
+
+<p>Congratulations&mdash;you have just finished the last assignment!</p>
+
+    <section>
+      <div class="page-header">
+        <a name="comments"></a><h2>Comments</h2>
+      </div>
+      <div id="discourse-comments" class="span12">
+        <p>
+          Note: If the comments fail to load, try refreshing the page or
+          <a href="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/assignments/a4.shtml">
+            logging into the discussion board through this link
+          </a>.
+        </p>
+      </div>
+    </section>
+
+    <!--#include virtual="../footer.html" -->
+  </main><!-- /.container -->
+  <script type="text/javascript">
+    var DiscourseEmbed = {
+      discourseUrl: 'https://mcsapps.utm.utoronto.ca/forum/',
+      topicId: 5658
+    };
+
+    function loadComments() {
+      var d = document.createElement('script'); d.type = 'text/javascript'; d.async = true;
+      d.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(d);
+    }
+
+  </script>
+
+  <!-- Begin Furkan's hack: Using a hidden iframe, automatically
+  log the user into Discourse before attempting
+  to load the comments. This will only work if this page has
+  Shibboleth authentication enabled through the .htaccess file -->
+
+  <iframe src="https://mcsapps.utm.utoronto.ca/forum/session/sso?return_path=https://mcs.utm.utoronto.ca/~209/load_comments.html" style="display:none;" width="0" height="0" name="forumlogin"></iframe>
+
+  <script>
+    window.addEventListener("message", function(event) {
+      if (event.origin != "https://mcs.utm.utoronto.ca") {
+        console.log("Ignoring cross-origin message from Discourse SSO iframe: " + event.origin);
+        return;
+      }
+
+      console.log("Received same-origin message from Discourse SSO iframe: loading comments.");
+      loadComments();
+    });
+  </script>
+
+  <!-- End Furkan's hack -->
+
+</body>
+</html>
